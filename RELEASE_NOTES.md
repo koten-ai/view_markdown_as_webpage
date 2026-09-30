@@ -15,7 +15,10 @@ python3 serve.py --version
 
 ## Unreleased
 
--
+- Restarting `serve.py` reopens the last folder from `config.local.json`, so a
+  refresh of the reader does not require picking it again.
+- A missing `README.md` (or any `?doc=` that is not in the folder) falls back
+  to the first real note instead of looking like the server is down.
 
 ---
 

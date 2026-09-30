@@ -826,10 +826,14 @@
         scrollToHash(hash);
       });
     } catch (err) {
+      if (defaultDoc && path !== defaultDoc && findNote(defaultDoc)) {
+        await loadDoc(defaultDoc, "", true);
+        return;
+      }
       article.innerHTML =
         '<div class="err"><p><strong>Could not load this note.</strong></p><p>' +
         String(err.message || err) +
-        "</p><p>Run <code>python3 serve.py /path/to/notes</code> and open <code>http://127.0.0.1:8765</code>.</p></div>";
+        '</p><p>Use <a href="/">Folders</a> to pick a notes folder.</p></div>';
     }
   }
 
@@ -1113,7 +1117,7 @@
       const data = await res.json();
       notes = data.notes || [];
       folderTitle = data.title || "Markdown";
-      defaultDoc = data.defaultDoc || (notes[0] && notes[0].path) || "README.md";
+      defaultDoc = data.defaultDoc || (notes[0] && notes[0].path) || "";
       if (brandName) brandName.textContent = folderTitle;
       else brand.textContent = folderTitle;
       brand.setAttribute("href", "?doc=" + encodeURIComponent(defaultDoc));
@@ -1131,7 +1135,14 @@
       return;
     }
     const r = routeFromLocation();
-    await loadDoc(r.path, r.hash, true);
+    const path = findNote(r.path) ? r.path : defaultDoc;
+    if (!path) {
+      article.innerHTML =
+        '<div class="err"><p><strong>No markdown in this folder.</strong></p>' +
+        '<p>Use <a href="/">Folders</a> to pick another.</p></div>';
+      return;
+    }
+    await loadDoc(path, path === r.path ? r.hash : "", true);
   }
 
   boot();

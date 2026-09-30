@@ -710,6 +710,13 @@ def main() -> int:
         if not notes_dir.is_dir():
             print("not a folder: %s" % notes_dir, file=sys.stderr)
             return 2
+    elif cfg.get("last"):
+        try:
+            last = expand_dir(str(cfg.get("last")))
+        except OSError:
+            last = None
+        if last is not None and last.is_dir():
+            notes_dir = last
 
     title = cfg.get("title")
     state = AppState(cfg, notes_dir, title)
