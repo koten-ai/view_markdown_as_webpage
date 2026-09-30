@@ -7,13 +7,21 @@
   const navList = document.getElementById("nav-list");
   const crumb = document.getElementById("crumb");
   const brand = document.getElementById("brand");
+  const brandName = brand.querySelector(".logo-name");
   const toggle = document.getElementById("nav-toggle");
   const scrim = document.getElementById("scrim");
   const lightbox = document.getElementById("lightbox");
-  const lbImg = document.getElementById("lb-img");
+  const lbStage = document.getElementById("lb-stage");
   const lbCap = document.getElementById("lb-cap");
   const TYPE_MAX = 3;
   const TYPE_KEY = "mdview-type";
+
+  const MD_RE = /\.(md|markdown|mdown|mkd)(?:$|[?#])/i;
+  const IMAGE_RE = /\.(png|jpe?g|gif|webp|avif|svg|bmp|ico|tiff?|heic|heif)(?:$|[?#])/i;
+  const VIDEO_RE = /\.(mp4|webm|ogv|mov|m4v)(?:$|[?#])/i;
+  const AUDIO_RE = /\.(mp3|wav|ogg|m4a|flac|aac)(?:$|[?#])/i;
+  const PDF_RE = /\.pdf(?:$|[?#])/i;
+  const TEXT_RE = /\.(txt|csv|tsv|json|ya?ml|xml|log|rst|adoc|html?|css|js|ts)(?:$|[?#])/i;
 
   let notes = [];
   let folderTitle = "Markdown";
@@ -25,19 +33,35 @@
     startOnLoad: false,
     theme: "neutral",
     securityLevel: "loose",
-    fontFamily: "Source Sans 3, sans-serif",
+    fontFamily: "Inter, sans-serif",
     themeVariables: {
-      primaryColor: "#efe8d8",
-      primaryTextColor: "#1c1712",
-      lineColor: "#8a7d6b",
-      secondaryColor: "#f4efe4",
-      tertiaryColor: "#fffdf8",
+      primaryColor: "#e7f7fd",
+      primaryTextColor: "#1f2a38",
+      lineColor: "#7b8898",
+      secondaryColor: "#f5f8fb",
+      tertiaryColor: "#ffffff",
     },
   });
 
   function dirOf(path) {
     const i = path.lastIndexOf("/");
     return i === -1 ? "" : path.slice(0, i + 1);
+  }
+
+  function extOf(path) {
+    const clean = (path || "").split("?")[0].split("#")[0];
+    const i = clean.lastIndexOf(".");
+    return i === -1 ? "" : clean.slice(i + 1).toLowerCase();
+  }
+
+  function fileKind(path) {
+    if (MD_RE.test(path)) return "md";
+    if (IMAGE_RE.test(path)) return "image";
+    if (VIDEO_RE.test(path)) return "video";
+    if (AUDIO_RE.test(path)) return "audio";
+    if (PDF_RE.test(path)) return "pdf";
+    if (TEXT_RE.test(path)) return "text";
+    return "other";
   }
 
   function extractMath(md) {
@@ -96,14 +120,12 @@
 
   function classify(href, current) {
     if (!href || href.startsWith("javascript:")) return { kind: "skip" };
+    if (href.startsWith("mailto:") || href.startsWith("tel:")) return { kind: "ext", url: href, host: href.split(":")[0] };
     if (href.startsWith("#")) return { kind: "hash", hash: href.slice(1) };
     if (/^https?:\/\//i.test(href) || href.startsWith("//")) {
       try {
         const abs = new URL(href, location.href);
-        if (/(^|\.)grokipedia\.com$/i.test(abs.hostname)) {
-          return { kind: "grok", url: abs.href };
-        }
-        return { kind: "ext", url: abs.href };
+        return { kind: "ext", url: abs.href, host: abs.hostname.replace(/^www\./, "") };
       } catch (e) {
         return { kind: "skip" };
       }
@@ -113,8 +135,9 @@
       const u = new URL(href, base);
       const path = decodeURIComponent(u.pathname.replace(/^\//, ""));
       const hash = (u.hash || "").replace(/^#/, "");
-      if (/\.md$/i.test(path)) return { kind: "local", path: path, hash: hash };
-      return { kind: "file" };
+      const kind = fileKind(path);
+      if (kind === "md") return { kind: "local", path: path, hash: hash };
+      return { kind: "file", path: path, file: kind, hash: hash };
     } catch (e) {
       return { kind: "skip" };
     }
@@ -124,7 +147,7 @@
     root.querySelectorAll("a[href]").forEach(function (a) {
       const href = a.getAttribute("href");
       const info = classify(href, current);
-      if (info.kind === "skip" || info.kind === "file" || info.kind === "hash") return;
+      if (info.kind === "skip" || info.kind === "hash") return;
       if (info.kind === "local") {
         a.classList.add("link-local");
         const next = "?doc=" + encodeURIComponent(info.path) + (info.hash ? "#" + info.hash : "");
@@ -137,53 +160,130 @@
         });
         return;
       }
-      if (info.kind === "grok") {
-        a.classList.add("link-grok");
-        a.setAttribute("target", "_blank");
-        a.setAttribute("rel", "noopener noreferrer");
-        if (!a.querySelector(".g-badge")) {
-          const badge = document.createElement("span");
-          badge.className = "g-badge";
-          badge.textContent = "G";
-          badge.title = "Grokipedia";
-          a.appendChild(badge);
+      if (info.kind === "file") {
+        a.classList.add("link-file");
+        const url = "/" + encodePath(info.path);
+        a.setAttribute("href", url);
+        if (!a.querySelector(".file-kind") && info.file && info.file !== "other") {
+          const chip = document.createElement("span");
+          chip.className = "file-kind";
+          chip.textContent = extOf(info.path) || info.file;
+          a.appendChild(chip);
         }
+        a.addEventListener("click", function (ev) {
+          if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey || ev.button !== 0) return;
+          if (info.file === "image" || info.file === "video" || info.file === "pdf") {
+            ev.preventDefault();
+            openLightbox({ type: info.file, src: url, alt: a.textContent.replace(/\s+\w+$/, "").trim() });
+          }
+        });
         return;
       }
       if (info.kind === "ext") {
         a.classList.add("link-ext");
         a.setAttribute("target", "_blank");
         a.setAttribute("rel", "noopener noreferrer");
+        if (info.host && !a.querySelector(".ext-host")) {
+          const chip = document.createElement("span");
+          chip.className = "ext-host";
+          chip.textContent = info.host;
+          a.appendChild(chip);
+        }
       }
     });
   }
 
-  function fullImageSrc(img) {
-    const raw = img.getAttribute("src") || img.src || "";
-    return raw.replace("/thumbs/", "/");
+  function fullSrc(src) {
+    return (src || "").replace("/thumbs/", "/");
   }
 
-  function openLightbox(img) {
-    lbImg.src = fullImageSrc(img);
-    lbImg.alt = img.alt || "";
-    lbCap.textContent = img.alt || "";
+  function openLightbox(opts) {
+    lbStage.innerHTML = "";
+    const type = opts.type || "image";
+    const src = fullSrc(opts.src);
+    if (type === "video") {
+      const v = document.createElement("video");
+      v.src = src;
+      v.controls = true;
+      v.autoplay = true;
+      v.addEventListener("click", function (ev) { ev.stopPropagation(); });
+      lbStage.appendChild(v);
+    } else if (type === "pdf") {
+      const f = document.createElement("iframe");
+      f.src = src;
+      f.title = opts.alt || "PDF";
+      f.addEventListener("click", function (ev) { ev.stopPropagation(); });
+      lbStage.appendChild(f);
+    } else {
+      const img = document.createElement("img");
+      img.src = src;
+      img.alt = opts.alt || "";
+      img.addEventListener("click", function (ev) { ev.stopPropagation(); });
+      lbStage.appendChild(img);
+    }
+    lbCap.textContent = opts.alt || "";
     lightbox.hidden = false;
     document.body.style.overflow = "hidden";
   }
 
   function closeLightbox() {
     lightbox.hidden = true;
-    lbImg.removeAttribute("src");
+    lbStage.innerHTML = "";
     document.body.style.overflow = "";
   }
 
-  function enhanceImages(root) {
-    root.querySelectorAll("img").forEach(function (img) {
+  function enhanceMedia(root) {
+    root.querySelectorAll("img[src]").forEach(function (img) {
+      const src = img.getAttribute("src") || "";
+      const kind = fileKind(src);
+      if (kind === "video") {
+        const v = document.createElement("video");
+        v.src = src;
+        v.controls = true;
+        v.preload = "metadata";
+        if (img.alt) v.setAttribute("aria-label", img.alt);
+        img.replaceWith(v);
+        v.addEventListener("click", function (ev) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          openLightbox({ type: "video", src: v.currentSrc || src, alt: img.alt || "" });
+        });
+        return;
+      }
+      if (kind === "audio") {
+        const a = document.createElement("audio");
+        a.src = src;
+        a.controls = true;
+        img.replaceWith(a);
+        return;
+      }
+      if (kind === "pdf") {
+        const f = document.createElement("iframe");
+        f.src = src;
+        f.className = "media-frame";
+        f.title = img.alt || "PDF";
+        img.replaceWith(f);
+        f.addEventListener("click", function (ev) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          openLightbox({ type: "pdf", src: src, alt: img.alt || "" });
+        });
+        return;
+      }
       img.addEventListener("click", function (ev) {
         ev.preventDefault();
         ev.stopPropagation();
-        openLightbox(img);
+        openLightbox({ type: "image", src: img.currentSrc || src, alt: img.alt || "" });
       });
+    });
+    root.querySelectorAll("video").forEach(function (v) {
+      v.controls = true;
+      v.addEventListener("click", function (ev) {
+        if (ev.target !== v) return;
+      });
+    });
+    root.querySelectorAll("audio").forEach(function (a) {
+      a.controls = true;
     });
   }
 
@@ -200,10 +300,10 @@
   function rewriteRelativeMedia(root, current) {
     const prefix = dirOf(current);
     if (!prefix) return;
-    root.querySelectorAll("img[src]").forEach(function (img) {
-      const val = img.getAttribute("src");
-      if (!val || /^(https?:|\/\/|data:|\/)/i.test(val)) return;
-      img.setAttribute("src", prefix + val);
+    root.querySelectorAll("img[src], video[src], audio[src], source[src], iframe[src]").forEach(function (el) {
+      const val = el.getAttribute("src");
+      if (!val || /^(https?:|\/\/|data:|\/|blob:)/i.test(val)) return;
+      el.setAttribute("src", prefix + val);
     });
   }
 
@@ -270,7 +370,7 @@
       slugHeadings(article);
       wrapTables(article);
       decorateLinks(article, path);
-      enhanceImages(article);
+      enhanceMedia(article);
       promoteMermaid(article);
       if (article.querySelector(".mermaid")) {
         try {
@@ -348,10 +448,10 @@
       .replace(/\\\(([\s\S]*?)\\\)/g, "$1")
       .replace(/\\\[([\s\S]*?)\\\]/g, "$1");
     const name = n.path.split("/").pop();
-    if (/^readme\.md$/i.test(name)) return "Overview";
-    if (/^glossary\.md$/i.test(name)) return "Glossary";
+    if (/^readme\.(md|markdown|mdown|mkd)$/i.test(name)) return "Overview";
+    if (/^glossary\.(md|markdown|mdown|mkd)$/i.test(name)) return "Glossary";
     if (n.path.indexOf("/") !== -1) {
-      let rest = n.path.replace(/\.md$/i, "");
+      let rest = n.path.replace(/\.(md|markdown|mdown|mkd)$/i, "");
       if (n.group && rest.indexOf(n.group + "/") === 0) {
         rest = rest.slice(n.group.length + 1);
       }
@@ -385,10 +485,7 @@
     closeLightbox();
   });
   lightbox.addEventListener("click", function (ev) {
-    if (ev.target === lightbox || ev.target === lbCap) closeLightbox();
-  });
-  lbImg.addEventListener("click", function (ev) {
-    ev.stopPropagation();
+    if (ev.target === lightbox || ev.target === lbCap || ev.target === lbStage) closeLightbox();
   });
   document.addEventListener("keydown", function (ev) {
     if (ev.key === "Escape") {
@@ -431,7 +528,8 @@
       notes = data.notes || [];
       folderTitle = data.title || "Markdown";
       defaultDoc = data.defaultDoc || (notes[0] && notes[0].path) || "README.md";
-      brand.textContent = folderTitle;
+      if (brandName) brandName.textContent = folderTitle;
+      else brand.textContent = folderTitle;
       brand.setAttribute("href", "?doc=" + encodeURIComponent(defaultDoc));
       brand.addEventListener("click", function (ev) {
         if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button !== 0) return;
@@ -445,7 +543,7 @@
         '<div class="err"><p><strong>This page needs the local server.</strong></p>' +
         "<p>From this repo, or with a path to another folder:</p>" +
         "<pre><code>python3 serve.py /path/to/notes</code></pre>" +
-        "<p>Then open <code>http://127.0.0.1:8765</code> so it can read the markdown and images.</p></div>";
+        "<p>Then open <code>http://127.0.0.1:8765</code> so it can read the markdown and files.</p></div>";
       return;
     }
     const r = routeFromLocation();

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Local markdown viewer. Stdlib only — no pip.
 
-Point it at any folder of .md files (and images). The HTML/CSS/JS
-live next to this script; the notes come from the folder you pass.
+Point it at any folder of notes. The HTML/CSS/JS live next to this
+script; markdown, images, and other files come from the folder you pass.
 
     python3 serve.py
     python3 serve.py /path/to/notes
@@ -35,10 +35,68 @@ SKIP_DIRS = {
     ".grok",
 }
 APP_PATHS = {"/", "/index.html", "/viewer.css", "/viewer.js"}
-NO_CACHE_EXT = {".html", ".css", ".js", ".md", ".json", ".svg"}
-README_NAMES = ("README.md", "Readme.md", "readme.md")
+NO_CACHE_EXT = {
+    ".html",
+    ".css",
+    ".js",
+    ".md",
+    ".markdown",
+    ".mdown",
+    ".mkd",
+    ".json",
+    ".svg",
+    ".txt",
+    ".csv",
+    ".yml",
+    ".yaml",
+}
+README_NAMES = (
+    "README.md",
+    "Readme.md",
+    "readme.md",
+    "README.markdown",
+    "readme.markdown",
+)
+MD_SUFFIXES = {".md", ".markdown", ".mdown", ".mkd"}
+EXTRA_MIME = {
+    ".md": "text/markdown; charset=utf-8",
+    ".markdown": "text/markdown; charset=utf-8",
+    ".mdown": "text/markdown; charset=utf-8",
+    ".mkd": "text/markdown; charset=utf-8",
+    ".txt": "text/plain; charset=utf-8",
+    ".csv": "text/csv; charset=utf-8",
+    ".tsv": "text/tab-separated-values; charset=utf-8",
+    ".json": "application/json; charset=utf-8",
+    ".yaml": "text/yaml; charset=utf-8",
+    ".yml": "text/yaml; charset=utf-8",
+    ".xml": "application/xml; charset=utf-8",
+    ".svg": "image/svg+xml",
+    ".webp": "image/webp",
+    ".avif": "image/avif",
+    ".heic": "image/heic",
+    ".heif": "image/heif",
+    ".bmp": "image/bmp",
+    ".tif": "image/tiff",
+    ".tiff": "image/tiff",
+    ".ico": "image/x-icon",
+    ".mp4": "video/mp4",
+    ".m4v": "video/x-m4v",
+    ".webm": "video/webm",
+    ".ogv": "video/ogg",
+    ".mov": "video/quicktime",
+    ".mp3": "audio/mpeg",
+    ".m4a": "audio/mp4",
+    ".aac": "audio/aac",
+    ".flac": "audio/flac",
+    ".wav": "audio/wav",
+    ".ogg": "audio/ogg",
+    ".pdf": "application/pdf",
+    ".woff": "font/woff",
+    ".woff2": "font/woff2",
+}
 
-mimetypes.add_type("text/markdown; charset=utf-8", ".md")
+for _ext, _mime in EXTRA_MIME.items():
+    mimetypes.add_type(_mime, _ext)
 
 
 def first_heading(path: Path) -> str:
@@ -72,21 +130,26 @@ def sort_key(item: dict, folder_name: str) -> tuple:
 
 def list_notes(root: Path, folder_name: str) -> list[dict]:
     notes: list[dict] = []
-    for path in root.rglob("*.md"):
-        try:
-            rel = path.relative_to(root)
-        except ValueError:
-            continue
-        if any(part in SKIP_DIRS for part in rel.parts):
-            continue
-        posix = rel.as_posix()
-        notes.append(
-            {
-                "path": posix,
-                "title": first_heading(path) or path.stem,
-                "group": group_for(posix, folder_name),
-            }
-        )
+    seen: set[str] = set()
+    for suffix in MD_SUFFIXES:
+        for path in root.rglob("*" + suffix):
+            try:
+                rel = path.relative_to(root)
+            except ValueError:
+                continue
+            if any(part in SKIP_DIRS for part in rel.parts):
+                continue
+            posix = rel.as_posix()
+            if posix in seen:
+                continue
+            seen.add(posix)
+            notes.append(
+                {
+                    "path": posix,
+                    "title": first_heading(path) or path.stem,
+                    "group": group_for(posix, folder_name),
+                }
+            )
     notes.sort(key=lambda n: sort_key(n, folder_name))
     return notes
 
@@ -123,6 +186,12 @@ def make_handler(app_dir: Path, notes_dir: Path, title: str):
             if ext in NO_CACHE_EXT or path in APP_PATHS or path == "/api/notes":
                 self.send_header("Cache-Control", "no-store")
             super().end_headers()
+
+        def guess_type(self, path: str):
+            ext = Path(path).suffix.lower()
+            if ext in EXTRA_MIME:
+                return EXTRA_MIME[ext]
+            return super().guess_type(path)
 
         def translate_path(self, path: str) -> str:
             bare = unquote(path.split("?", 1)[0].split("#", 1)[0])
