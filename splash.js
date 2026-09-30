@@ -174,9 +174,17 @@
     if (currentPath) openFolder(currentPath);
   });
 
+  function showVersion(version) {
+    const el = document.getElementById("app-version");
+    if (!el || !version) return;
+    el.hidden = false;
+    el.textContent = "v" + version;
+  }
+
   async function boot() {
     try {
       const state = await getJson("/api/state");
+      showVersion(state.version);
       renderRecent(state.recent || []);
       renderShortcuts(state.shortcuts || []);
       const start = state.last || (state.shortcuts[0] && state.shortcuts[0].path) || state.start_dir || "";

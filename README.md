@@ -19,7 +19,7 @@ python3 serve.py /path/to/your/notes
 ```
 
 ```text
-python3 serve.py [folder] [--port 8765] [--host 127.0.0.1] [--title Name]
+python3 serve.py [folder] [--port 8765] [--host 127.0.0.1] [--title Name] [--version]
 ```
 
 | Flag | Meaning |
@@ -28,6 +28,7 @@ python3 serve.py [folder] [--port 8765] [--host 127.0.0.1] [--title Name]
 | `--port` | Overrides `config.json` (default `8765`) |
 | `--host` | Overrides `config.json` (default `127.0.0.1`) |
 | `--title` | Header name (default: folder name) |
+| `--version` | Print the running version and exit |
 
 Host, port, start directory, shortcuts, and skip-list live in [`config.json`](config.json). Recent folders are stored in `config.local.json` (gitignored) so the committed config stays portable.
 
@@ -69,6 +70,17 @@ The sidebar lists every markdown file it finds. Root files sit under the folder 
 - everything else — that folder (notes, images, video, PDFs, …)
 
 `.git`, virtualenvs, and `node_modules` are not served.
+
+## Version
+
+Single source of truth: `VERSION` in [`serve.py`](serve.py). That value is
+wired into the boot log, `python3 serve.py --version`, `GET /api/state`, the
+splash header, and the reader rail. Do not hard-code it in HTML or JS.
+
+What shipped in each number lives in [`RELEASE_NOTES.md`](RELEASE_NOTES.md)
+(newest first; keep an **Unreleased** section while building). To cut a
+release: bump `VERSION`, move Unreleased into a dated `## X.Y.Z` block, restart
+the server, then tag `vX.Y.Z`.
 
 ## Requirements
 

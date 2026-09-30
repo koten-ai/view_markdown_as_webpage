@@ -192,6 +192,12 @@ html, body {
 .legend p { margin: 0.32rem 0; }
 .legend .hint { margin-top: 0.75rem; font-style: italic; }
 .legend .keys { font-style: normal; font-size: 0.75rem; letter-spacing: 0.01em; }
+.legend .app-version {
+  margin-top: 0.85rem;
+  font: 500 0.72rem var(--mono);
+  color: #6e7e90;
+  letter-spacing: 0.03em;
+}
 
 .swatch {
   display: inline-block;
@@ -847,6 +853,18 @@ html, body {
   margin: 0;
   color: #9aabc0;
   font-size: 0.92rem;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.splash-top .app-version {
+  margin-left: auto;
+  flex-shrink: 0;
+  font: 500 0.78rem var(--mono);
+  color: #8b9aab;
+  letter-spacing: 0.02em;
 }
 
 .splash {
@@ -1009,6 +1027,6 @@ html, body {
     grid-template-columns: 1fr;
     padding: 1rem;
   }
-  .splash-top { padding: 0.9rem 1rem; flex-wrap: wrap; }
+  .splash-top { padding: 0.9rem 1rem; }
   .splash-foot { flex-direction: column; align-items: stretch; }
 }

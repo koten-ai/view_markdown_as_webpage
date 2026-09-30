@@ -1094,6 +1094,11 @@
         if (state && state.gutter) {
           document.documentElement.style.setProperty("--gutter", state.gutter);
         }
+        const verEl = document.getElementById("app-version");
+        if (verEl && state && state.version) {
+          verEl.hidden = false;
+          verEl.textContent = "v" + state.version;
+        }
         if (!state.open) {
           location.replace("/");
           return;

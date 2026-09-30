@@ -3,6 +3,7 @@
 
     python3 serve.py
     python3 serve.py /path/to/notes
+    python3 serve.py --version
 
 Open http://127.0.0.1:8765 and pick a folder on the splash page.
 Host/port/start directory live in config.json next to this script.
@@ -24,6 +25,15 @@ from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, unquote, urljoin, urlparse
 from urllib.request import HTTPRedirectHandler, Request, build_opener
+
+# Single source of truth for:
+#   python3 serve.py --version
+#   startup log
+#   GET /api/state → version  (splash header + reader rail; never hard-code in HTML/JS)
+#
+# Bump here, then move Unreleased in RELEASE_NOTES.md and tag vX.Y.Z.
+# Current: 0.1.0 — first numbered release (folder reader, splash picker, reading tools).
+VERSION = "0.1.0"
 
 APP_DIR = Path(__file__).resolve().parent
 SKIP_DIRS = {
@@ -523,6 +533,7 @@ class AppState:
             title = self.title
             cfg = dict(self.cfg)
         return {
+            "version": VERSION,
             "open": bool(opened),
             "path": opened,
             "title": title,
@@ -666,6 +677,11 @@ def main() -> int:
         description="Serve a folder of markdown files as a local webpage."
     )
     parser.add_argument(
+        "--version",
+        action="version",
+        version="markdown-viewer %s" % VERSION,
+    )
+    parser.add_argument(
         "root",
         nargs="?",
         default=None,
@@ -702,7 +718,7 @@ def main() -> int:
     handler = make_handler(APP_DIR, state)
     httpd = ThreadingHTTPServer((host, port), handler)
     url = "http://%s:%s" % (host, port)
-    print("Markdown viewer", flush=True)
+    print("Markdown viewer %s" % VERSION, flush=True)
     print("  config  %s" % CONFIG_PATH, flush=True)
     if notes_dir:
         print("  folder  %s" % notes_dir, flush=True)
