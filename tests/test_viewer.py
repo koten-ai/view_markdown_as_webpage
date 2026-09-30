@@ -172,14 +172,19 @@ class ViewerFoldTests(unittest.TestCase):
     def test_filter_highlights_fuzzy_matches(self):
         page = self._open_reader()
         box = page.locator("#nav-filter")
-        box.fill("blog")
+        box.fill("two")
         expect(page.locator('.nav-group[data-group="atlas"]')).to_be_hidden()
-        blogs = page.locator('.nav-group[data-group="blogs"]')
-        expect(blogs).to_be_visible()
-        expect(blogs.locator("mark").first).to_be_visible()
-        expect(blogs.locator(".nav-group-body a")).to_have_count(2)
+        expect(page.locator('a[data-path="blogs/two.md"]')).to_be_visible()
+        expect(page.locator('a[data-path="blogs/three.md"]')).to_be_hidden()
+        expect(page.locator('a[data-path="README.md"]')).to_be_hidden()
+        mark = page.locator("#nav mark").first
+        expect(mark).to_be_visible()
+        color = mark.evaluate("el => getComputedStyle(el).color")
+        bg = mark.evaluate("el => getComputedStyle(el).backgroundColor")
+        self.assertNotEqual(color, bg)
         box.fill("")
         expect(page.locator('.nav-group[data-group="atlas"]')).to_be_visible()
+        expect(page.locator('a[data-path="blogs/three.md"]')).to_be_visible()
 
 
 if __name__ == "__main__":

@@ -29,6 +29,9 @@ python3 serve.py --version
   Documents, and Desktop.
 - Filter notes uses [fuzzysort](https://github.com/farzher/fuzzysort) (CDN):
   fuzzy / multi-word match, with matching letters highlighted in the rail.
+  Non-matching notes are actually removed from the list (`display:none` so a
+  `display:block` rule cannot keep them visible). Highlight is gold on dark
+  navy for contrast.
 
 ---
 
