@@ -23,6 +23,8 @@ python3 serve.py --version
   **Show all** sits at the top of the list; folder names are bolder and white.
 - `tests/` holds stdlib unit tests for `serve.py` and Playwright tests for the
   reader.
+- Sidebar hover previews sit to the right of the notes rail so you can move
+  the mouse down the list without the card covering the next note.
 
 ---
 

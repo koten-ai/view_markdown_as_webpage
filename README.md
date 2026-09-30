@@ -49,7 +49,7 @@ Host, port, start directory, shortcuts, and skip-list live in [`config.json`](co
 | Copy | Button on code fences |
 | `[` / `]` | Previous / next note |
 | Top | Appears after you scroll; print hides the chrome |
-| Hover a link | Preview card. Local notes show the heading and a slice of the text; local pictures show the image; external pages show the title and description (sites usually block a live iframe). |
+| Hover a link | Preview card. In the notes rail the card sits to the **right** of the list so you can move the mouse down the sidebar. In the article it still opens under the link. Local notes show the heading and a slice of the text; local pictures show the image; external pages show the title and description (sites usually block a live iframe). |
 
 The article is **fluid**: a left/right gutter from `config.json` (`gutter`, default 1.75rem; 1rem on a phone) and no max-width. Widen the window and tables grow with it instead of clipping. If a table is still wider than the card, that table scrolls sideways on its own.
 

@@ -425,12 +425,27 @@
     const r = anchor.getBoundingClientRect();
     const pw = peekEl.offsetWidth;
     const ph = peekEl.offsetHeight;
-    let top = r.bottom + 10;
-    let left = r.left;
-    if (top + ph > window.innerHeight - 12) top = r.top - ph - 10;
-    if (left + pw > window.innerWidth - 12) left = window.innerWidth - pw - 12;
-    if (left < 12) left = 12;
-    if (top < 12) top = 12;
+    const inRail = !!(navEl && navEl.contains(anchor));
+    peekEl.classList.toggle("peek-rail", inRail);
+    let top;
+    let left;
+    if (inRail) {
+      const railBox = navEl.getBoundingClientRect();
+      left = railBox.right + 12;
+      top = r.top;
+      if (left + pw > window.innerWidth - 12) {
+        left = Math.max(railBox.right + 8, window.innerWidth - pw - 12);
+      }
+      if (top + ph > window.innerHeight - 12) top = window.innerHeight - ph - 12;
+      if (top < 12) top = 12;
+    } else {
+      top = r.bottom + 10;
+      left = r.left;
+      if (top + ph > window.innerHeight - 12) top = r.top - ph - 10;
+      if (left + pw > window.innerWidth - 12) left = window.innerWidth - pw - 12;
+      if (left < 12) left = 12;
+      if (top < 12) top = 12;
+    }
     peekEl.style.top = Math.round(top) + "px";
     peekEl.style.left = Math.round(left) + "px";
   }
@@ -1086,6 +1101,13 @@
 
   bindPeekRoot(article);
   bindPeekRoot(navList);
+  if (navList) {
+    navList.addEventListener("scroll", function () {
+      if (!peekEl || peekEl.hidden) return;
+      if (peekAnchor && peekAnchor.matches(":hover")) placePeek(peekAnchor);
+      else hidePeek();
+    }, { passive: true });
+  }
   if (peekEl) {
     peekEl.addEventListener("pointerenter", function () {
       clearTimeout(peekHideTimer);

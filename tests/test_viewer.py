@@ -155,6 +155,20 @@ class ViewerFoldTests(unittest.TestCase):
         expect(all_btn).to_have_text("Hide all")
         expect(page.locator(".nav-group.is-collapsed")).to_have_count(0)
 
+    def test_sidebar_peek_sits_to_the_right(self):
+        page = self._open_reader()
+        rail = page.locator("#nav")
+        link = page.locator('.nav-group[data-group="blogs"] .nav-group-body a').first
+        expect(link).to_be_visible()
+        rail_box = rail.bounding_box()
+        link.hover()
+        peek = page.locator("#peek")
+        expect(peek).to_be_visible(timeout=4000)
+        peek_box = peek.bounding_box()
+        self.assertIsNotNone(rail_box)
+        self.assertIsNotNone(peek_box)
+        self.assertGreaterEqual(peek_box["x"], rail_box["x"] + rail_box["width"] - 2)
+
 
 if __name__ == "__main__":
     unittest.main()
