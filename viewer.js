@@ -1088,7 +1088,22 @@
 
   async function boot() {
     try {
+      const st = await fetch("/api/state", { cache: "no-store" });
+      if (st.ok) {
+        const state = await st.json();
+        if (state && state.gutter) {
+          document.documentElement.style.setProperty("--gutter", state.gutter);
+        }
+        if (!state.open) {
+          location.replace("/");
+          return;
+        }
+      }
       const res = await fetch("/api/notes", { cache: "no-store" });
+      if (res.status === 409) {
+        location.replace("/");
+        return;
+      }
       if (!res.ok) throw new Error("notes list failed");
       const data = await res.json();
       notes = data.notes || [];
@@ -1107,9 +1122,7 @@
     } catch (err) {
       article.innerHTML =
         '<div class="err"><p><strong>This page needs the local server.</strong></p>' +
-        "<p>From this repo, or with a path to another folder:</p>" +
-        "<pre><code>python3 serve.py /path/to/notes</code></pre>" +
-        "<p>Then open <code>http://127.0.0.1:8765</code> so it can read the markdown and files.</p></div>";
+        "<p>Run <code>python3 serve.py</code> and open <code>http://127.0.0.1:8765</code> to pick a folder.</p></div>";
       return;
     }
     const r = routeFromLocation();

@@ -1,0 +1,22 @@
+{
+  "host": "127.0.0.1",
+  "port": 8765,
+  "title": null,
+  "start_dir": "~",
+  "recent_max": 8,
+  "gutter": "1.75rem",
+  "shortcuts": ["~", "~/Documents", "~/Desktop"],
+  "skip_dirs": [
+    ".git",
+    ".hg",
+    ".svn",
+    ".venv",
+    "venv",
+    "env",
+    "__pycache__",
+    "node_modules",
+    ".idea",
+    ".vscode",
+    ".grok"
+  ]
+}

@@ -3,69 +3,48 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Markdown</title>
+  <title>Choose a folder · Markdown</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231c2733'/%3E%3Crect x='6' y='6' width='20' height='20' rx='5' fill='%2300b4e6'/%3E%3Ctext x='16' y='21' text-anchor='middle' font-size='12' font-family='Inter,Arial' font-weight='700' fill='%23fff'%3EMd%3C/text%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css" />
   <link rel="stylesheet" href="viewer.css" />
 </head>
-<body>
-  <a class="skip" href="#doc">Skip to document</a>
-  <div class="app">
-    <div class="progress" id="progress" aria-hidden="true"></div>
-    <aside id="nav" class="rail">
-      <a class="logo" id="brand" href="?doc=README.md">
-        <span class="logo-mark">Md</span>
-        <span class="logo-name">Markdown</span>
-      </a>
-      <label class="nav-filter">
-        <span class="visually-hidden">Filter notes</span>
-        <input id="nav-filter" type="search" placeholder="Filter notes" autocomplete="off" />
-      </label>
-      <div id="nav-list" class="rail-list"></div>
-      <p class="nav-empty" id="nav-empty" hidden>No matching notes</p>
-      <section class="legend" aria-label="Link colors">
-        <p class="nav-kicker">Links</p>
-        <p><span class="swatch local"></span> Local note</p>
-        <p><span class="swatch file"></span> Local file</p>
-        <p><span class="swatch ext"></span> External — new tab</p>
-        <p class="hint">Click a picture, video, or PDF to enlarge. Hover a link for a preview.</p>
-        <p class="hint keys">/ filter · [ ] notes · W wide</p>
-      </section>
-    </aside>
-    <div class="workspace">
-      <header class="top">
-        <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open notes list" aria-controls="nav" aria-expanded="false">
-          <span></span><span></span><span></span>
-        </button>
-        <p class="crumb" id="crumb">README</p>
-        <button type="button" class="zen-toggle" id="zen-toggle" aria-pressed="false" title="Hide notes list — more width">Wide</button>
-        <div class="type-ctrl" role="group" aria-label="Text size">
-          <button type="button" id="type-down" title="Smaller text">A−</button>
-          <button type="button" id="type-up" title="Bigger text">A+</button>
-        </div>
-      </header>
-      <main class="main">
-        <article id="doc" class="markdown" data-type="1">Loading…</article>
-      </main>
-    </div>
-    <div class="scrim" id="scrim" hidden></div>
-  </div>
-  <button type="button" class="to-top" id="to-top" hidden>Top</button>
-  <div id="peek" class="peek" hidden role="tooltip"></div>
+<body class="splash-body">
+  <header class="splash-top">
+    <a class="logo" href="/">
+      <span class="logo-mark">Md</span>
+      <span class="logo-name">Markdown</span>
+    </a>
+    <p class="splash-tag">Pick a folder of notes to view</p>
+  </header>
 
-  <div id="lightbox" class="lightbox" hidden>
-    <button type="button" class="lb-close" id="lb-close" aria-label="Close">Close</button>
-    <div class="lb-stage" id="lb-stage"></div>
-    <p class="lb-cap" id="lb-cap"></p>
-  </div>
+  <main class="splash">
+    <section class="splash-card" aria-label="Recent folders">
+      <p class="splash-kicker">Recent</p>
+      <div id="recent" class="recent-list"></div>
+      <p class="splash-empty" id="recent-empty">No recent folders yet. Browse below, then View.</p>
+    </section>
 
-  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/contrib/auto-render.min.js"></script>
-  <script defer src="viewer.js"></script>
+    <section class="splash-card splash-browser" aria-label="Folder browser">
+      <p class="splash-kicker">This computer</p>
+      <div class="splash-shortcuts" id="shortcuts"></div>
+      <form class="path-row" id="path-form">
+        <label class="visually-hidden" for="path-input">Folder path</label>
+        <input id="path-input" type="text" spellcheck="false" autocomplete="off" />
+        <button type="submit" class="ghost-btn">Go</button>
+      </form>
+      <nav class="crumbs" id="crumbs" aria-label="Path"></nav>
+      <div class="dir-list" id="dirs"></div>
+      <p class="dir-empty" id="dir-empty" hidden>No subfolders here.</p>
+      <div class="splash-foot">
+        <p class="md-count" id="md-count"></p>
+        <button type="button" class="view-btn" id="view-btn">View this folder</button>
+      </div>
+      <p class="splash-err" id="err" hidden></p>
+    </section>
+  </main>
+
+  <script src="splash.js"></script>
 </body>
 </html>
