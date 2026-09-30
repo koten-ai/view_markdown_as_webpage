@@ -15,6 +15,7 @@ import html as htmlmod
 import ipaddress
 import json
 import mimetypes
+import os
 import socket
 import sys
 import threading
@@ -58,7 +59,11 @@ APP_PATHS = {
     "/splash.js",
 }
 CONFIG_PATH = APP_DIR / "config.json"
-LOCAL_PATH = APP_DIR / "config.local.json"
+LOCAL_PATH = (
+    Path(os.environ["MDVIEW_LOCAL"]).expanduser()
+    if os.environ.get("MDVIEW_LOCAL")
+    else APP_DIR / "config.local.json"
+)
 DEFAULT_CONFIG = {
     "host": "127.0.0.1",
     "port": 8765,
@@ -422,6 +427,23 @@ def expand_dir(raw: str) -> Path:
     return Path(raw or "~").expanduser().resolve()
 
 
+def pick_notes_dir(cli_root: str | None, cfg: dict) -> Path | None:
+    """CLI folder wins; otherwise reopen last from config.local.json if it still exists."""
+    if cli_root:
+        path = Path(cli_root).expanduser().resolve()
+        if not path.is_dir():
+            raise FileNotFoundError("not a folder: %s" % path)
+        return path
+    last = str(cfg.get("last") or "").strip()
+    if not last:
+        return None
+    try:
+        path = expand_dir(last)
+    except OSError:
+        return None
+    return path if path.is_dir() else None
+
+
 def shortcut_items(cfg: dict) -> list[dict]:
     items = []
     seen: set[str] = set()
@@ -704,19 +726,11 @@ def main() -> int:
     if args.title:
         cfg["title"] = args.title
 
-    notes_dir = None
-    if args.root:
-        notes_dir = Path(args.root).expanduser().resolve()
-        if not notes_dir.is_dir():
-            print("not a folder: %s" % notes_dir, file=sys.stderr)
-            return 2
-    elif cfg.get("last"):
-        try:
-            last = expand_dir(str(cfg.get("last")))
-        except OSError:
-            last = None
-        if last is not None and last.is_dir():
-            notes_dir = last
+    try:
+        notes_dir = pick_notes_dir(args.root, cfg)
+    except FileNotFoundError as err:
+        print(str(err), file=sys.stderr)
+        return 2
 
     title = cfg.get("title")
     state = AppState(cfg, notes_dir, title)

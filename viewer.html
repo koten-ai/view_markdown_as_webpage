@@ -24,8 +24,13 @@
         <span class="visually-hidden">Filter notes</span>
         <input id="nav-filter" type="search" placeholder="Filter notes" autocomplete="off" />
       </label>
-      <div id="nav-list" class="rail-list"></div>
-      <p class="nav-empty" id="nav-empty" hidden>No matching notes</p>
+      <div class="rail-notes">
+        <div class="rail-tools">
+          <button type="button" class="nav-all" id="nav-all" hidden>Hide all</button>
+        </div>
+        <div id="nav-list" class="rail-list"></div>
+        <p class="nav-empty" id="nav-empty" hidden>No matching notes</p>
+      </div>
       <section class="legend" aria-label="Link colors">
         <p class="nav-kicker">Links</p>
         <p><span class="swatch local"></span> Local note</p>

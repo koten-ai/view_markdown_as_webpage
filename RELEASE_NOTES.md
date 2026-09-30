@@ -19,6 +19,10 @@ python3 serve.py --version
   refresh of the reader does not require picking it again.
 - A missing `README.md` (or any `?doc=` that is not in the folder) falls back
   to the first real note instead of looking like the server is down.
+- Notes rail: each folder has a ▾ / ▴ Hide/Show control; **Hide all** /
+  **Show all** sits at the top of the list; folder names are bolder and white.
+- `tests/` holds stdlib unit tests for `serve.py` and Playwright tests for the
+  reader.
 
 ---
 

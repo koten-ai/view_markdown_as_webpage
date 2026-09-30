@@ -145,6 +145,33 @@ html, body {
 .nav-filter input::placeholder { color: #8b9aab; }
 .nav-filter input:focus { box-shadow: 0 0 0 2px rgba(0, 180, 230, 0.45); }
 
+.rail-notes {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rail-tools {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0.15rem 0.35rem;
+}
+
+.nav-all {
+  border: 0;
+  background: transparent;
+  color: var(--cyan);
+  font: 650 0.72rem var(--sans);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0.25rem 0.4rem;
+  border-radius: 0.4rem;
+}
+.nav-all:hover { color: #fff; background: var(--rail-2); }
+.nav-all:focus-visible { outline: 2px solid var(--cyan); outline-offset: 1px; }
+
 .rail-list { flex: 1; min-height: 0; overflow: auto; }
 
 .nav-empty {
@@ -162,7 +189,59 @@ html, body {
   color: #8b9aab;
 }
 
-.nav-group { margin-bottom: 1.15rem; }
+.nav-group { margin-bottom: 0.85rem; }
+
+.nav-group-head {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin: 0 0 0.15rem;
+}
+
+.nav-fold {
+  flex: 0 0 1.45rem;
+  width: 1.45rem;
+  height: 1.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 0.35rem;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  color: #c5d0dc;
+}
+.nav-fold:hover { background: var(--rail-2); color: #fff; }
+.nav-fold:focus-visible { outline: 2px solid var(--cyan); outline-offset: 1px; }
+
+.nav-chevron {
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 0.28rem solid transparent;
+  border-right: 0.28rem solid transparent;
+  border-top: 0.34rem solid currentColor;
+}
+.nav-group.is-collapsed .nav-chevron {
+  border-top: 0;
+  border-bottom: 0.34rem solid currentColor;
+}
+
+.nav-folder {
+  margin: 0;
+  min-width: 0;
+  font-weight: 700;
+  font-size: 0.86rem;
+  letter-spacing: -0.02em;
+  color: #fff;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-group.is-collapsed .nav-group-body { display: none; }
 
 .rail a:not(.logo) {
   display: block;

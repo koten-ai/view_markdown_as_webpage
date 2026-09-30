@@ -8,6 +8,7 @@
   const navList = document.getElementById("nav-list");
   const navEmpty = document.getElementById("nav-empty");
   const filterInput = document.getElementById("nav-filter");
+  const navAll = document.getElementById("nav-all");
   const crumb = document.getElementById("crumb");
   const brand = document.getElementById("brand");
   const brandName = brand.querySelector(".logo-name");
@@ -23,6 +24,7 @@
   const TYPE_MAX = 3;
   const TYPE_KEY = "mdview-type";
   const ZEN_KEY = "mdview-zen";
+  const FOLD_KEY = "mdview-fold";
 
   const MD_RE = /\.(md|markdown|mdown|mkd)(?:$|[?#])/i;
   const IMAGE_RE = /\.(png|jpe?g|gif|webp|avif|svg|bmp|ico|tiff?|heic|heif)(?:$|[?#])/i;
@@ -33,6 +35,7 @@
 
   let notes = [];
   let folderTitle = "Markdown";
+  let folderKey = "";
   let defaultDoc = "README.md";
   let currentPath = defaultDoc;
 
@@ -757,8 +760,12 @@
   }
 
   function markActive(path) {
-    navList.querySelectorAll("a").forEach(function (a) {
+    navList.querySelectorAll(".nav-group-body a").forEach(function (a) {
       a.classList.toggle("active", a.dataset.path === path);
+      if (a.dataset.path === path) {
+        const sec = a.closest(".nav-group");
+        if (sec && sec.classList.contains("is-collapsed")) setCollapsed(sec, false);
+      }
     });
   }
 
@@ -846,21 +853,76 @@
     return seen;
   }
 
+  function foldMap() {
+    try {
+      return JSON.parse(localStorage.getItem(FOLD_KEY) || "{}") || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function groupIsCollapsed(name) {
+    const m = foldMap()[folderKey] || {};
+    return !!m[name];
+  }
+
+  function persistCollapsed(name, collapsed) {
+    const all = foldMap();
+    if (!all[folderKey]) all[folderKey] = {};
+    if (collapsed) all[folderKey][name] = true;
+    else delete all[folderKey][name];
+    try {
+      localStorage.setItem(FOLD_KEY, JSON.stringify(all));
+    } catch (e) { /* ignore */ }
+  }
+
+  function syncFoldButton(sec) {
+    const btn = sec.querySelector(".nav-fold");
+    const g = sec.dataset.group || "";
+    const collapsed = sec.classList.contains("is-collapsed");
+    if (!btn) return;
+    btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    btn.setAttribute("aria-label", (collapsed ? "Show " : "Hide ") + g);
+    btn.title = collapsed ? "Show" : "Hide";
+  }
+
+  function setCollapsed(sec, collapsed) {
+    sec.classList.toggle("is-collapsed", collapsed);
+    persistCollapsed(sec.dataset.group, collapsed);
+    syncFoldButton(sec);
+    updateAllButton();
+  }
+
+  function updateAllButton() {
+    if (!navAll) return;
+    const groups = navList.querySelectorAll(".nav-group");
+    navAll.hidden = groups.length === 0;
+    let anyOpen = false;
+    groups.forEach(function (sec) {
+      if (!sec.classList.contains("is-collapsed")) anyOpen = true;
+    });
+    navAll.textContent = anyOpen ? "Hide all" : "Show all";
+  }
+
   function applyFilter() {
     const query = ((filterInput && filterInput.value) || "").trim().toLowerCase();
     let shown = 0;
     navList.querySelectorAll(".nav-group").forEach(function (sec) {
       let visible = 0;
-      sec.querySelectorAll("a").forEach(function (a) {
+      sec.querySelectorAll(".nav-group-body a").forEach(function (a) {
         const hay = (a.textContent + " " + (a.dataset.path || "")).toLowerCase();
         const match = !query || hay.indexOf(query) !== -1;
         a.hidden = !match;
         if (match) visible += 1;
       });
       sec.hidden = visible === 0;
+      if (query && visible) sec.classList.remove("is-collapsed");
+      else if (!query) sec.classList.toggle("is-collapsed", groupIsCollapsed(sec.dataset.group));
+      syncFoldButton(sec);
       shown += visible;
     });
     if (navEmpty) navEmpty.hidden = shown > 0;
+    updateAllButton();
   }
 
   function renderNav() {
@@ -876,10 +938,28 @@
       if (!items || !items.length) return;
       const sec = document.createElement("section");
       sec.className = "nav-group";
-      const h = document.createElement("p");
-      h.className = "nav-kicker";
-      h.textContent = g;
-      sec.appendChild(h);
+      sec.dataset.group = g;
+      const head = document.createElement("div");
+      head.className = "nav-group-head";
+      const fold = document.createElement("button");
+      fold.type = "button";
+      fold.className = "nav-fold";
+      const chev = document.createElement("span");
+      chev.className = "nav-chevron";
+      chev.setAttribute("aria-hidden", "true");
+      fold.appendChild(chev);
+      fold.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        setCollapsed(sec, !sec.classList.contains("is-collapsed"));
+      });
+      const label = document.createElement("p");
+      label.className = "nav-folder";
+      label.textContent = g;
+      head.appendChild(fold);
+      head.appendChild(label);
+      const body = document.createElement("div");
+      body.className = "nav-group-body";
       items.forEach(function (n) {
         const a = document.createElement("a");
         a.href = "?doc=" + encodeURIComponent(n.path);
@@ -891,8 +971,12 @@
           closeNav();
           loadDoc(n.path, "", false);
         });
-        sec.appendChild(a);
+        body.appendChild(a);
       });
+      sec.appendChild(head);
+      sec.appendChild(body);
+      if (groupIsCollapsed(g)) sec.classList.add("is-collapsed");
+      syncFoldButton(sec);
       navList.appendChild(sec);
     });
     applyFilter();
@@ -969,6 +1053,22 @@
   }
   if (filterInput) {
     filterInput.addEventListener("input", applyFilter);
+  }
+  if (navAll) {
+    navAll.addEventListener("click", function () {
+      const groups = navList.querySelectorAll(".nav-group");
+      let anyOpen = false;
+      groups.forEach(function (sec) {
+        if (!sec.classList.contains("is-collapsed")) anyOpen = true;
+      });
+      const collapse = anyOpen;
+      groups.forEach(function (sec) {
+        sec.classList.toggle("is-collapsed", collapse);
+        persistCollapsed(sec.dataset.group, collapse);
+        syncFoldButton(sec);
+      });
+      updateAllButton();
+    });
   }
   if (toTop) {
     toTop.addEventListener("click", function () {
@@ -1117,6 +1217,7 @@
       const data = await res.json();
       notes = data.notes || [];
       folderTitle = data.title || "Markdown";
+      folderKey = data.path || folderTitle;
       defaultDoc = data.defaultDoc || (notes[0] && notes[0].path) || "";
       if (brandName) brandName.textContent = folderTitle;
       else brand.textContent = folderTitle;

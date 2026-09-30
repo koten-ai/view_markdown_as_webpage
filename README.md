@@ -42,6 +42,8 @@ Host, port, start directory, shortcuts, and skip-list live in [`config.json`](co
 | Click a picture | Lightbox; Esc or the dim area closes it. Paths under `thumbs/` open the full-size file next to them. |
 | **A−** / **A+** | Text size (kept in the browser) |
 | **Wide** | Hide the notes rail so the article (and tables) use the extra width. `W` does the same. Kept in the browser. |
+| Folder name | Bold white label. The ▾ / ▴ button to its left hides or shows that folder. |
+| **Hide all** / **Show all** | Collapse or expand every folder group. |
 | Filter | Type in the rail, or press `/`. Enter opens the first match. |
 | On this page | Jump list of headings on longer notes |
 | Copy | Button on code fences |
@@ -85,5 +87,20 @@ the server, then tag `vX.Y.Z`.
 ## Requirements
 
 Python 3.9+ on the machine that opens the browser. Marked, Mermaid, and KaTeX load from a CDN, so the reader needs network the first time those caches fill.
+
+## Tests
+
+Python unit tests are stdlib only. Playwright tests need the extra packages in
+[`tests/requirements.txt`](tests/requirements.txt).
+
+```bash
+python3 -m unittest discover -s tests
+python3 -m venv tests/.venv
+tests/.venv/bin/pip install -r tests/requirements.txt
+tests/.venv/bin/playwright install chromium
+tests/.venv/bin/python -m unittest discover -s tests
+```
+
+See [`tests/README.md`](tests/README.md).
 
 Apache License 2.0 (see [LICENSE](LICENSE)).
