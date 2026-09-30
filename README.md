@@ -52,6 +52,14 @@ python3 serve.py ../graph_research
 | Arrow ↗ + host | Any external site (Grokipedia, Jira, GitHub, …) — new tab. Host chips are hidden in tables. |
 | Click a picture | Lightbox; Esc or the dim area closes it. Paths under `thumbs/` open the full-size file next to them. |
 | **A−** / **A+** | Text size (kept in the browser) |
+| **Wide** | Hide the notes rail so the article (and tables) use the extra width. `W` does the same. Kept in the browser. |
+| Filter | Type in the rail, or press `/`. Enter opens the first match. |
+| On this page | Jump list of headings on longer notes |
+| Copy | Button on code fences |
+| `[` / `]` | Previous / next note |
+| Top | Appears after you scroll; print hides the chrome |
+
+The article is **fluid**: a fixed left/right gutter (`--gutter` in `viewer.css`, 1.75rem on desktop / 1rem on a phone) and no max-width. Widen the window and tables grow with it instead of clipping. If a table is still wider than the card, that table scrolls sideways on its own.
 
 Images: PNG, JPEG, GIF, WebP, AVIF, SVG, BMP, TIFF, HEIC, ICO.  
 Also inline: MP4 / WebM / MOV, audio, PDF. The server sends the usual MIME types for those plus CSV, JSON, YAML, and the rest.

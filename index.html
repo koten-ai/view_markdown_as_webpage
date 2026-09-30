@@ -14,18 +14,25 @@
 <body>
   <a class="skip" href="#doc">Skip to document</a>
   <div class="app">
+    <div class="progress" id="progress" aria-hidden="true"></div>
     <aside id="nav" class="rail">
       <a class="logo" id="brand" href="?doc=README.md">
         <span class="logo-mark">Md</span>
         <span class="logo-name">Markdown</span>
       </a>
+      <label class="nav-filter">
+        <span class="visually-hidden">Filter notes</span>
+        <input id="nav-filter" type="search" placeholder="Filter notes" autocomplete="off" />
+      </label>
       <div id="nav-list" class="rail-list"></div>
+      <p class="nav-empty" id="nav-empty" hidden>No matching notes</p>
       <section class="legend" aria-label="Link colors">
         <p class="nav-kicker">Links</p>
         <p><span class="swatch local"></span> Local note</p>
         <p><span class="swatch file"></span> Local file</p>
         <p><span class="swatch ext"></span> External — new tab</p>
         <p class="hint">Click a picture, video, or PDF to enlarge.</p>
+        <p class="hint keys">/ filter · [ ] notes · W wide</p>
       </section>
     </aside>
     <div class="workspace">
@@ -34,6 +41,7 @@
           <span></span><span></span><span></span>
         </button>
         <p class="crumb" id="crumb">README</p>
+        <button type="button" class="zen-toggle" id="zen-toggle" aria-pressed="false" title="Hide notes list — more width">Wide</button>
         <div class="type-ctrl" role="group" aria-label="Text size">
           <button type="button" id="type-down" title="Smaller text">A−</button>
           <button type="button" id="type-up" title="Bigger text">A+</button>
@@ -45,6 +53,7 @@
     </div>
     <div class="scrim" id="scrim" hidden></div>
   </div>
+  <button type="button" class="to-top" id="to-top" hidden>Top</button>
 
   <div id="lightbox" class="lightbox" hidden>
     <button type="button" class="lb-close" id="lb-close" aria-label="Close">Close</button>
