@@ -58,6 +58,7 @@ python3 serve.py ../graph_research
 | Copy | Button on code fences |
 | `[` / `]` | Previous / next note |
 | Top | Appears after you scroll; print hides the chrome |
+| Hover a link | Preview card. Local notes show the heading and a slice of the text; local pictures show the image; external pages show the title and description (sites usually block a live iframe). |
 
 The article is **fluid**: a fixed left/right gutter (`--gutter` in `viewer.css`, 1.75rem on desktop / 1rem on a phone) and no max-width. Widen the window and tables grow with it instead of clipping. If a table is still wider than the card, that table scrolls sideways on its own.
 
@@ -74,6 +75,7 @@ The sidebar lists every markdown file it finds. Root files sit under the folder 
 
 - `/`, `/viewer.css`, `/viewer.js` — this repo (the reader)
 - `/api/notes` — JSON list of markdown under the folder you passed
+- `/api/preview?url=` — title/description for an external http(s) page (public hosts only; used on hover)
 - everything else — that folder (notes, images, video, PDFs, …)
 
 `.git`, virtualenvs, and `node_modules` are not served.

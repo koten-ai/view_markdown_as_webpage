@@ -19,6 +19,7 @@
   const lightbox = document.getElementById("lightbox");
   const lbStage = document.getElementById("lb-stage");
   const lbCap = document.getElementById("lb-cap");
+  const peekEl = document.getElementById("peek");
   const TYPE_MAX = 3;
   const TYPE_KEY = "mdview-type";
   const ZEN_KEY = "mdview-zen";
@@ -293,6 +294,318 @@
     });
   }
 
+  const peekCache = Object.create(null);
+  let peekTimer = 0;
+  let peekHideTimer = 0;
+  let peekGen = 0;
+  let peekAnchor = null;
+
+  function canHoverPeek() {
+    return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  }
+
+  function hidePeek() {
+    clearTimeout(peekTimer);
+    clearTimeout(peekHideTimer);
+    peekAnchor = null;
+    if (peekEl) peekEl.hidden = true;
+  }
+
+  function scheduleHidePeek() {
+    clearTimeout(peekHideTimer);
+    peekHideTimer = setTimeout(hidePeek, 160);
+  }
+
+  function sanitizePeekHtml(html) {
+    const tmp = document.createElement("div");
+    tmp.innerHTML = html;
+    tmp.querySelectorAll("script, iframe, object, embed, form, video, audio, style, .h-anchor").forEach(function (el) {
+      el.remove();
+    });
+    tmp.querySelectorAll("*").forEach(function (el) {
+      Array.prototype.slice.call(el.attributes).forEach(function (attr) {
+        if (/^on/i.test(attr.name) || ((attr.name === "href" || attr.name === "src") && /^\s*javascript:/i.test(attr.value))) {
+          el.removeAttribute(attr.name);
+        }
+      });
+    });
+    tmp.querySelectorAll("a").forEach(function (a) {
+      a.setAttribute("tabindex", "-1");
+    });
+    tmp.querySelectorAll("img").forEach(function (img, i) {
+      if (i > 0) img.remove();
+    });
+    tmp.querySelectorAll("table").forEach(function (table, i) {
+      if (i > 0) {
+        table.remove();
+        return;
+      }
+      table.querySelectorAll("tr").forEach(function (row, j) {
+        if (j > 4) row.remove();
+      });
+    });
+    tmp.querySelectorAll("pre, .mermaid, .toc").forEach(function (el) {
+      el.remove();
+    });
+    return tmp.innerHTML;
+  }
+
+  function mdWindow(md, hash) {
+    const lines = md.split(/\r?\n/);
+    let start = 0;
+    let title = "";
+    let level = 1;
+    if (hash) {
+      for (let i = 0; i < lines.length; i++) {
+        const m = lines[i].match(/^(#{1,6})\s+(.+?)\s*#*\s*$/);
+        if (!m) continue;
+        if (githubSlug(m[2]) === hash) {
+          start = i;
+          title = m[2].trim();
+          level = m[1].length;
+          break;
+        }
+      }
+    }
+    if (!title) {
+      for (let i = 0; i < lines.length; i++) {
+        const m = lines[i].match(/^#\s+(.+)$/);
+        if (m) {
+          title = m[1].trim();
+          start = i;
+          break;
+        }
+      }
+    }
+    const chunk = [];
+    let chars = 0;
+    for (let i = start; i < lines.length; i++) {
+      if (i === start && title && /^#{1,6}\s+/.test(lines[i])) continue;
+      if (i > start) {
+        const m = lines[i].match(/^(#{1,6})\s+/);
+        if (m && hash && m[1].length <= level) break;
+        if (m && !hash && m[1].length === 1) break;
+      }
+      chunk.push(lines[i]);
+      chars += lines[i].length;
+      if (chars > 900 && chunk.length > 6) break;
+    }
+    return { title: title, md: chunk.join("\n").replace(/```[\s\S]*?```/g, "") };
+  }
+
+  function htmlFromSection(id) {
+    const el = document.getElementById(id);
+    if (!el) return null;
+    const wrap = document.createElement("div");
+    let n = el.nextElementSibling;
+    let count = 0;
+    while (n && count < 6) {
+      if (/^H[1-6]$/.test(n.tagName)) break;
+      if (n.classList && (n.classList.contains("toc") || n.classList.contains("code-wrap"))) {
+        n = n.nextElementSibling;
+        continue;
+      }
+      wrap.appendChild(n.cloneNode(true));
+      count += 1;
+      if ((wrap.innerText || "").length > 520) break;
+      n = n.nextElementSibling;
+    }
+    return {
+      title: headingLabel(el),
+      html: sanitizePeekHtml(wrap.innerHTML),
+    };
+  }
+
+  function placePeek(anchor) {
+    if (!peekEl || !anchor) return;
+    peekEl.hidden = false;
+    const r = anchor.getBoundingClientRect();
+    const pw = peekEl.offsetWidth;
+    const ph = peekEl.offsetHeight;
+    let top = r.bottom + 10;
+    let left = r.left;
+    if (top + ph > window.innerHeight - 12) top = r.top - ph - 10;
+    if (left + pw > window.innerWidth - 12) left = window.innerWidth - pw - 12;
+    if (left < 12) left = 12;
+    if (top < 12) top = 12;
+    peekEl.style.top = Math.round(top) + "px";
+    peekEl.style.left = Math.round(left) + "px";
+  }
+
+  function usablePeekImage(url) {
+    if (!url) return "";
+    if (/icon[-_.]|favicon|apple-touch|\/logo\b/i.test(url)) return "";
+    return url;
+  }
+
+  function fillPeek(data) {
+    peekEl.innerHTML = "";
+    peekEl.className = "peek peek-" + (data.kind || "note");
+    const image = usablePeekImage(data.image);
+    if (image) {
+      const img = document.createElement("img");
+      img.className = "peek-media";
+      img.src = image;
+      img.alt = "";
+      img.addEventListener("load", function () {
+        if (peekAnchor) placePeek(peekAnchor);
+      });
+      peekEl.appendChild(img);
+    }
+    const k = document.createElement("p");
+    k.className = "peek-kicker";
+    k.textContent = data.kicker || "";
+    peekEl.appendChild(k);
+    if (data.title) {
+      const t = document.createElement("p");
+      t.className = "peek-title";
+      t.textContent = data.title;
+      peekEl.appendChild(t);
+    }
+    const body = document.createElement("div");
+    body.className = "peek-body";
+    if (data.html) body.innerHTML = data.html;
+    else body.textContent = data.body || "";
+    peekEl.appendChild(body);
+  }
+
+  function peekTarget(a) {
+    if (!a) return null;
+    const href = a.getAttribute("href") || "";
+    if (!href || href.startsWith("javascript:") || href.startsWith("mailto:") || href.startsWith("tel:")) return null;
+    if (a.dataset.path) return { kind: "local", path: a.dataset.path, hash: "" };
+    if (a.classList.contains("link-local")) {
+      try {
+        const u = new URL(a.getAttribute("href"), location.href);
+        return { kind: "local", path: u.searchParams.get("doc") || "", hash: (u.hash || "").replace(/^#/, "") };
+      } catch (e) {
+        return null;
+      }
+    }
+    if (a.classList.contains("link-file")) {
+      const path = (a.getAttribute("href") || "").replace(/^\//, "");
+      return { kind: "file", path: path, file: fileKind(path) };
+    }
+    if (a.classList.contains("link-ext")) {
+      return { kind: "ext", url: a.href, host: (a.querySelector(".ext-host") && a.querySelector(".ext-host").textContent) || "" };
+    }
+    if (href.charAt(0) === "#") return { kind: "hash", hash: href.slice(1) };
+    return null;
+  }
+
+  async function fetchNoteText(path) {
+    if (peekCache[path]) return peekCache[path];
+    const res = await fetch("/" + encodePath(path), { cache: "no-store" });
+    if (!res.ok) throw new Error("missing");
+    const md = await res.text();
+    peekCache[path] = md;
+    return md;
+  }
+
+  async function showPeek(a) {
+    if (!peekEl || !canHoverPeek() || lightbox.hidden === false) return;
+    const info = peekTarget(a);
+    if (!info) return;
+    peekAnchor = a;
+    const gen = ++peekGen;
+    fillPeek({ kind: info.kind === "ext" ? "ext" : "note", kicker: "Loading", title: "", body: "…" });
+    placePeek(a);
+    try {
+      if (info.kind === "hash" || (info.kind === "local" && info.path === currentPath && info.hash)) {
+        const section = htmlFromSection(info.hash);
+        if (section && gen === peekGen) {
+          fillPeek({
+            kind: "note",
+            kicker: "On this page",
+            title: section.title,
+            html: section.html,
+          });
+          placePeek(a);
+          return;
+        }
+      }
+      if (info.kind === "local") {
+        const md = await fetchNoteText(info.path);
+        if (gen !== peekGen) return;
+        const win = mdWindow(md, info.hash);
+        const extracted = extractMath(win.md);
+        const html = sanitizePeekHtml(restoreMath(marked.parse(extracted.md), extracted.slots));
+        const meta = findNote(info.path);
+        fillPeek({
+          kind: "note",
+          kicker: info.hash ? "Note · section" : "Note",
+          title: win.title || (meta && meta.title) || info.path,
+          html: html,
+        });
+        placePeek(a);
+        return;
+      }
+      if (info.kind === "file") {
+        if (info.file === "image") {
+          fillPeek({
+            kind: "file",
+            kicker: extOf(info.path) || "image",
+            title: info.path.split("/").pop(),
+            image: "/" + encodePath(fullSrc(info.path)),
+            body: "",
+          });
+        } else {
+          fillPeek({
+            kind: "file",
+            kicker: "Local file",
+            title: info.path.split("/").pop(),
+            body: (extOf(info.path) || info.file) + " — click to open",
+          });
+        }
+        placePeek(a);
+        return;
+      }
+      if (info.kind === "ext") {
+        const res = await fetch("/api/preview?url=" + encodeURIComponent(info.url), { cache: "no-store" });
+        if (gen !== peekGen) return;
+        const data = res.ok ? await res.json() : {};
+        fillPeek({
+          kind: "ext",
+          kicker: data.host || info.host || "External",
+          title: data.title || info.host || info.url,
+          body: data.description || info.url,
+          image: data.image || "",
+        });
+        placePeek(a);
+      }
+    } catch (err) {
+      if (gen !== peekGen) return;
+      fillPeek({ kind: "note", kicker: "Preview", title: "", body: "Could not load a preview." });
+      placePeek(a);
+    }
+  }
+
+  function schedulePeek(a) {
+    if (!canHoverPeek() || !a) return;
+    clearTimeout(peekHideTimer);
+    if (peekAnchor === a && peekEl && !peekEl.hidden) return;
+    clearTimeout(peekTimer);
+    peekTimer = setTimeout(function () {
+      showPeek(a);
+    }, 280);
+  }
+
+  function bindPeekRoot(root) {
+    if (!root) return;
+    root.addEventListener("pointerover", function (ev) {
+      const a = ev.target.closest("a[href]");
+      if (!a || !root.contains(a)) return;
+      schedulePeek(a);
+    });
+    root.addEventListener("pointerout", function (ev) {
+      const a = ev.target.closest("a[href]");
+      if (!a) return;
+      const rel = ev.relatedTarget;
+      if (rel && (a.contains(rel) || (peekEl && peekEl.contains(rel)))) return;
+      scheduleHidePeek();
+    });
+  }
+
   function fullSrc(src) {
     return (src || "").replace("/thumbs/", "/");
   }
@@ -476,6 +789,7 @@
     const meta = findNote(path);
     crumb.textContent = meta ? meta.title : path;
     document.title = (meta ? meta.title : path) + " · " + folderTitle;
+    hidePeek();
     article.innerHTML = "<p>Loading…</p>";
     try {
       const res = await fetch("/" + encodePath(path), { cache: "no-store" });
@@ -666,6 +980,15 @@
     if (ev.target === lightbox || ev.target === lbCap || ev.target === lbStage) closeLightbox();
   });
 
+  bindPeekRoot(article);
+  bindPeekRoot(navList);
+  if (peekEl) {
+    peekEl.addEventListener("pointerenter", function () {
+      clearTimeout(peekHideTimer);
+    });
+    peekEl.addEventListener("pointerleave", scheduleHidePeek);
+  }
+
   article.addEventListener("click", function (ev) {
     const a = ev.target.closest("a[href]");
     if (!a || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey || ev.button !== 0) return;
@@ -681,7 +1004,8 @@
   document.addEventListener("keydown", function (ev) {
     const typing = isTypingTarget(ev.target);
     if (ev.key === "Escape") {
-      if (!lightbox.hidden) closeLightbox();
+      if (peekEl && !peekEl.hidden) hidePeek();
+      else if (!lightbox.hidden) closeLightbox();
       else closeNav();
       if (typing && filterInput) filterInput.blur();
       return;
@@ -720,7 +1044,18 @@
   });
 
   window.addEventListener("scroll", updateChrome, { passive: true });
-  window.addEventListener("resize", updateChrome);
+  window.addEventListener("resize", function () {
+    updateChrome();
+    if (peekEl && !peekEl.hidden && peekAnchor) placePeek(peekAnchor);
+  });
+  window.addEventListener("scroll", function () {
+    if (!peekEl || peekEl.hidden) return;
+    if (peekAnchor && peekAnchor.matches(":hover")) {
+      placePeek(peekAnchor);
+      return;
+    }
+    hidePeek();
+  }, { passive: true });
 
   function typeStep() {
     return Number(article.getAttribute("data-type") || "1");

@@ -13,12 +13,19 @@ Then open http://127.0.0.1:8765
 from __future__ import annotations
 
 import argparse
+import html as htmlmod
+import ipaddress
 import json
 import mimetypes
+import socket
 import sys
+import time
+from html.parser import HTMLParser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import unquote, urlparse
+from urllib.error import HTTPError, URLError
+from urllib.parse import parse_qs, unquote, urljoin, urlparse
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 APP_DIR = Path(__file__).resolve().parent
 SKIP_DIRS = {
@@ -162,6 +169,177 @@ def default_doc(notes: list[dict]) -> str:
     return notes[0]["path"] if notes else ""
 
 
+PREVIEW_MAX_BYTES = 65536
+PREVIEW_TIMEOUT = 4
+PREVIEW_TTL = 600.0
+_PREVIEW_CACHE: dict[str, tuple[float, dict]] = {}
+
+
+class _PreviewRedirect(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if not preview_url_allowed(newurl):
+            raise URLError("redirect blocked")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+class _MetaParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self._in_title = False
+        self._in_p = False
+        self.title_parts: list[str] = []
+        self.p_parts: list[str] = []
+        self.meta: dict[str, str] = {}
+        self._p_done = False
+
+    def handle_starttag(self, tag, attrs):
+        d = {str(k).lower(): (v or "") for k, v in attrs}
+        if tag == "title":
+            self._in_title = True
+        elif tag == "meta":
+            name = (d.get("name") or d.get("property") or d.get("itemprop") or "").lower()
+            content = d.get("content") or ""
+            if name and content and name not in self.meta:
+                self.meta[name] = content
+        elif tag == "p" and not self._p_done:
+            self._in_p = True
+
+    def handle_endtag(self, tag):
+        if tag == "title":
+            self._in_title = False
+        elif tag == "p" and self._in_p:
+            self._in_p = False
+            self._p_done = True
+
+    def handle_data(self, data):
+        if self._in_title:
+            self.title_parts.append(data)
+        elif self._in_p and len("".join(self.p_parts)) < 400:
+            self.p_parts.append(data)
+
+
+def preview_url_allowed(url: str) -> bool:
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        return False
+    if parsed.scheme not in ("http", "https"):
+        return False
+    host = (parsed.hostname or "").strip().lower()
+    if not host or host in ("localhost", "localhost.localdomain"):
+        return False
+    try:
+        infos = socket.getaddrinfo(host, parsed.port or None)
+    except socket.gaierror:
+        return False
+    if not infos:
+        return False
+    for info in infos:
+        addr = info[4][0]
+        try:
+            ip = ipaddress.ip_address(addr)
+        except ValueError:
+            return False
+        if not ip.is_global:
+            return False
+    return True
+
+
+def _clean_text(value: str, limit: int) -> str:
+    text = htmlmod.unescape(value or "")
+    text = " ".join(text.split())
+    if len(text) > limit:
+        text = text[: limit - 1].rstrip() + "…"
+    return text
+
+
+def parse_preview_html(raw: str, final_url: str) -> dict:
+    parser = _MetaParser()
+    try:
+        parser.feed(raw)
+        parser.close()
+    except Exception:
+        pass
+    meta = parser.meta
+    title = meta.get("og:title") or meta.get("twitter:title") or "".join(parser.title_parts)
+    desc = (
+        meta.get("og:description")
+        or meta.get("description")
+        or meta.get("twitter:description")
+        or " ".join(parser.p_parts)
+    )
+    image = meta.get("og:image") or meta.get("twitter:image") or ""
+    if image:
+        image = urljoin(final_url, image)
+        if urlparse(image).scheme not in ("http", "https"):
+            image = ""
+    host = (urlparse(final_url).hostname or "").replace("www.", "")
+    return {
+        "ok": True,
+        "url": final_url,
+        "host": host,
+        "title": _clean_text(title, 160),
+        "description": _clean_text(desc, 320),
+        "image": image,
+    }
+
+
+def fetch_preview(url: str) -> dict:
+    now = time.time()
+    cached = _PREVIEW_CACHE.get(url)
+    if cached and now - cached[0] < PREVIEW_TTL:
+        return cached[1]
+    if len(url) > 2000 or not preview_url_allowed(url):
+        payload = {"ok": False, "url": url, "host": "", "title": "", "description": "", "image": ""}
+        return payload
+    req = Request(
+        url,
+        headers={
+            "User-Agent": "MarkdownViewer/1.0 (+local preview)",
+            "Accept": "text/html,application/xhtml+xml;q=0.9,*/*;q=0.1",
+        },
+        method="GET",
+    )
+    opener = build_opener(_PreviewRedirect)
+    payload = {"ok": False, "url": url, "host": "", "title": "", "description": "", "image": ""}
+    try:
+        with opener.open(req, timeout=PREVIEW_TIMEOUT) as resp:
+            final = resp.geturl() or url
+            if not preview_url_allowed(final):
+                return payload
+            ctype = (resp.headers.get("Content-Type") or "").lower()
+            if "html" not in ctype and "xml" not in ctype and ctype:
+                host = (urlparse(final).hostname or "").replace("www.", "")
+                payload = {
+                    "ok": True,
+                    "url": final,
+                    "host": host,
+                    "title": host,
+                    "description": "",
+                    "image": "",
+                }
+            else:
+                raw = resp.read(PREVIEW_MAX_BYTES + 1)
+                if len(raw) > PREVIEW_MAX_BYTES:
+                    raw = raw[:PREVIEW_MAX_BYTES]
+                text = raw.decode("utf-8", errors="replace")
+                payload = parse_preview_html(text, final)
+    except (HTTPError, URLError, TimeoutError, OSError, ValueError):
+        host = (urlparse(url).hostname or "").replace("www.", "")
+        payload = {
+            "ok": False,
+            "url": url,
+            "host": host,
+            "title": host,
+            "description": "Could not load a preview.",
+            "image": "",
+        }
+    if len(_PREVIEW_CACHE) > 48:
+        _PREVIEW_CACHE.clear()
+    _PREVIEW_CACHE[url] = (now, payload)
+    return payload
+
+
 def is_safe(root: Path, rel: Path) -> bool:
     try:
         resolved = (root / rel).resolve()
@@ -183,7 +361,7 @@ def make_handler(app_dir: Path, notes_dir: Path, title: str):
         def end_headers(self) -> None:
             path = urlparse(self.path).path
             ext = Path(unquote(path)).suffix.lower()
-            if ext in NO_CACHE_EXT or path in APP_PATHS or path == "/api/notes":
+            if ext in NO_CACHE_EXT or path in APP_PATHS or path in ("/api/notes", "/api/preview"):
                 self.send_header("Cache-Control", "no-store")
             super().end_headers()
 
@@ -213,6 +391,17 @@ def make_handler(app_dir: Path, notes_dir: Path, title: str):
                     },
                     ensure_ascii=False,
                 ).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            if parsed.path == "/api/preview":
+                qs = parse_qs(parsed.query)
+                url = (qs.get("url") or [""])[0]
+                payload = fetch_preview(url)
+                body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json; charset=utf-8")
                 self.send_header("Content-Length", str(len(body)))
