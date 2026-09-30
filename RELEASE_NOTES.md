@@ -25,6 +25,8 @@ python3 serve.py --version
   reader.
 - Sidebar hover previews sit to the right of the notes rail so you can move
   the mouse down the list without the card covering the next note.
+- Splash **This computer** shortcuts include **Downloads** alongside Home,
+  Documents, and Desktop.
 
 ---
 

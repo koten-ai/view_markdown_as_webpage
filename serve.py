@@ -71,7 +71,7 @@ DEFAULT_CONFIG = {
     "start_dir": "~",
     "recent_max": 8,
     "gutter": "1.75rem",
-    "shortcuts": ["~", "~/Documents", "~/Desktop"],
+    "shortcuts": ["~", "~/Documents", "~/Desktop", "~/Downloads"],
     "skip_dirs": sorted(SKIP_DIRS),
     "recent": [],
     "last": "",

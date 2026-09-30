@@ -30,7 +30,7 @@ python3 serve.py [folder] [--port 8765] [--host 127.0.0.1] [--title Name] [--ver
 | `--title` | Header name (default: folder name) |
 | `--version` | Print the running version and exit |
 
-Host, port, start directory, shortcuts, and skip-list live in [`config.json`](config.json). Recent folders are stored in `config.local.json` (gitignored) so the committed config stays portable. The last folder is reopened when the server starts; the splash page still lets you switch.
+Host, port, start directory, shortcuts, and skip-list live in [`config.json`](config.json). Default shortcut chips are Home, Documents, Desktop, and Downloads. Recent folders are stored in `config.local.json` (gitignored) so the committed config stays portable. The last folder is reopened when the server starts; the splash page still lets you switch.
 
 ## What you get
 

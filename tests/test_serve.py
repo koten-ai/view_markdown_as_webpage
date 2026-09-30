@@ -104,6 +104,21 @@ class PreviewTests(unittest.TestCase):
         self.assertEqual(data["host"], "example.com")
 
 
+class ShortcutTests(unittest.TestCase):
+    def test_default_includes_downloads(self):
+        self.assertIn("~/Downloads", serve.DEFAULT_CONFIG["shortcuts"])
+
+    def test_downloads_badge_label(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            downs = root / "Downloads"
+            downs.mkdir()
+            items = serve.shortcut_items(
+                {"shortcuts": [str(root / "missing"), str(downs)]}
+            )
+            self.assertEqual(items, [{"name": "Downloads", "path": str(downs.resolve())}])
+
+
 class PickNotesDirTests(unittest.TestCase):
     def test_cli_wins(self):
         got = serve.pick_notes_dir(str(FIXTURES), {"last": "/no/such"})
