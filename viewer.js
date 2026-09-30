@@ -1,4 +1,4 @@
-/* global marked, mermaid, renderMathInElement */
+/* global marked, mermaid, renderMathInElement, fuzzysort */
 (function () {
   "use strict";
 
@@ -919,20 +919,108 @@
     navAll.textContent = anyOpen ? "Hide all" : "Show all";
   }
 
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function highlightIndexes(text, indexes) {
+    text = String(text || "");
+    if (!indexes || !indexes.length) return escapeHtml(text);
+    const on = Object.create(null);
+    for (let i = 0; i < indexes.length; i++) on[indexes[i]] = true;
+    let html = "";
+    let i = 0;
+    while (i < text.length) {
+      if (on[i]) {
+        let j = i;
+        while (j < text.length && on[j]) j += 1;
+        html += "<mark>" + escapeHtml(text.slice(i, j)) + "</mark>";
+        i = j;
+      } else {
+        let j = i + 1;
+        while (j < text.length && !on[j]) j += 1;
+        html += escapeHtml(text.slice(i, j));
+        i = j;
+      }
+    }
+    return html;
+  }
+
+  function setHighlighted(el, text, indexes) {
+    if (!el) return;
+    if (indexes && indexes.length) el.innerHTML = highlightIndexes(text, indexes);
+    else el.textContent = text;
+  }
+
+  function fuzzyReady() {
+    return typeof fuzzysort !== "undefined" && fuzzysort && typeof fuzzysort.go === "function";
+  }
+
   function applyFilter() {
-    const query = ((filterInput && filterInput.value) || "").trim().toLowerCase();
+    const query = ((filterInput && filterInput.value) || "").trim();
+    const links = navList.querySelectorAll(".nav-group-body a");
+    const fuzzy = fuzzyReady();
+
+    if (!query) {
+      links.forEach(function (a) {
+        a.hidden = false;
+        a.textContent = a.dataset.label || "";
+      });
+    } else if (fuzzy) {
+      const items = [];
+      links.forEach(function (a) {
+        items.push({
+          el: a,
+          label: a.dataset.label || "",
+          hay: (a.dataset.label || "") + " " + (a.dataset.path || "") + " " + (a.dataset.group || ""),
+        });
+      });
+      const hits = fuzzysort.go(query, items, { key: "hay", threshold: 0.4 });
+      const matched = new Set();
+      hits.forEach(function (hit) {
+        const el = hit.obj.el;
+        matched.add(el);
+        el.hidden = false;
+        const labelHit = fuzzysort.single(query, hit.obj.label);
+        setHighlighted(el, hit.obj.label, labelHit && labelHit.indexes);
+      });
+      links.forEach(function (a) {
+        if (matched.has(a)) return;
+        a.hidden = true;
+        a.textContent = a.dataset.label || "";
+      });
+    } else {
+      const q = query.toLowerCase();
+      links.forEach(function (a) {
+        const hay = ((a.dataset.label || "") + " " + (a.dataset.path || "")).toLowerCase();
+        a.hidden = hay.indexOf(q) === -1;
+        a.textContent = a.dataset.label || "";
+      });
+    }
+
     let shown = 0;
     navList.querySelectorAll(".nav-group").forEach(function (sec) {
       let visible = 0;
       sec.querySelectorAll(".nav-group-body a").forEach(function (a) {
-        const hay = (a.textContent + " " + (a.dataset.path || "")).toLowerCase();
-        const match = !query || hay.indexOf(query) !== -1;
-        a.hidden = !match;
-        if (match) visible += 1;
+        if (!a.hidden) visible += 1;
       });
       sec.hidden = visible === 0;
       if (query && visible) sec.classList.remove("is-collapsed");
       else if (!query) sec.classList.toggle("is-collapsed", groupIsCollapsed(sec.dataset.group));
+      const folder = sec.querySelector(".nav-folder");
+      if (folder) {
+        const name = folder.dataset.label || "";
+        if (query && fuzzy) {
+          const fh = fuzzysort.single(query, name);
+          setHighlighted(folder, name, fh && fh.indexes);
+        } else {
+          folder.textContent = name;
+        }
+      }
       syncFoldButton(sec);
       shown += visible;
     });
@@ -970,6 +1058,7 @@
       });
       const label = document.createElement("p");
       label.className = "nav-folder";
+      label.dataset.label = g;
       label.textContent = g;
       head.appendChild(fold);
       head.appendChild(label);
@@ -979,7 +1068,9 @@
         const a = document.createElement("a");
         a.href = "?doc=" + encodeURIComponent(n.path);
         a.dataset.path = n.path;
-        a.textContent = shortTitle(n);
+        a.dataset.group = g;
+        a.dataset.label = shortTitle(n);
+        a.textContent = a.dataset.label;
         a.addEventListener("click", function (ev) {
           if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button !== 0) return;
           ev.preventDefault();

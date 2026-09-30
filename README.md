@@ -44,7 +44,7 @@ Host, port, start directory, shortcuts, and skip-list live in [`config.json`](co
 | **Wide** | Hide the notes rail so the article (and tables) use the extra width. `W` does the same. Kept in the browser. |
 | Folder name | Bold white label. The ▾ / ▴ button to its left hides or shows that folder. |
 | **Hide all** / **Show all** | Collapse or expand every folder group. |
-| Filter | Type in the rail, or press `/`. Enter opens the first match. |
+| Filter | Type in the rail, or press `/`. [fuzzysort](https://github.com/farzher/fuzzysort) fuzzy-matches titles and paths and highlights the letters. Enter opens the first match. |
 | On this page | Jump list of headings on longer notes |
 | Copy | Button on code fences |
 | `[` / `]` | Previous / next note |
@@ -56,7 +56,7 @@ The article is **fluid**: a left/right gutter from `config.json` (`gutter`, defa
 Images: PNG, JPEG, GIF, WebP, AVIF, SVG, BMP, TIFF, HEIC, ICO.  
 Also inline: MP4 / WebM / MOV, audio, PDF. The server sends the usual MIME types for those plus CSV, JSON, YAML, and the rest.
 
-Also: GitHub-flavored markdown, tables, `mermaid` fences, and KaTeX `\(…\)` / `\[…\]` (dollar signs are left alone so `$300` stays money).
+Also: GitHub-flavored markdown, tables, `mermaid` fences, and KaTeX `\(…\)` / `\[…\]` (dollar signs are left alone so `$300` stays money). Note filter uses `fuzzysort` from a CDN.
 
 The sidebar lists every markdown file it finds. Root files sit under the folder name; files in a subfolder are grouped by that folder. `README.md` opens first when it exists.
 

@@ -169,6 +169,18 @@ class ViewerFoldTests(unittest.TestCase):
         self.assertIsNotNone(peek_box)
         self.assertGreaterEqual(peek_box["x"], rail_box["x"] + rail_box["width"] - 2)
 
+    def test_filter_highlights_fuzzy_matches(self):
+        page = self._open_reader()
+        box = page.locator("#nav-filter")
+        box.fill("blog")
+        expect(page.locator('.nav-group[data-group="atlas"]')).to_be_hidden()
+        blogs = page.locator('.nav-group[data-group="blogs"]')
+        expect(blogs).to_be_visible()
+        expect(blogs.locator("mark").first).to_be_visible()
+        expect(blogs.locator(".nav-group-body a")).to_have_count(2)
+        box.fill("")
+        expect(page.locator('.nav-group[data-group="atlas"]')).to_be_visible()
+
 
 if __name__ == "__main__":
     unittest.main()

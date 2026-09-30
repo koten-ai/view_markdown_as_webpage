@@ -27,6 +27,8 @@ python3 serve.py --version
   the mouse down the list without the card covering the next note.
 - Splash **This computer** shortcuts include **Downloads** alongside Home,
   Documents, and Desktop.
+- Filter notes uses [fuzzysort](https://github.com/farzher/fuzzysort) (CDN):
+  fuzzy / multi-word match, with matching letters highlighted in the rail.
 
 ---
 
