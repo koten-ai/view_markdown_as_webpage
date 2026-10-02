@@ -3,7 +3,9 @@ $Root = Split-Path -Parent $PSScriptRoot
 Set-Location $Root
 $Py = if ($env:PYTHON) { $env:PYTHON } else { "python" }
 $Venv = Join-Path $Root "packaging\.venv"
-$Version = & $Py -c "import pathlib,re; t=pathlib.Path('serve.py').read_text(); print(re.search(r'VERSION = \"([^\"]+)\"', t).group(1))"
+$match = Select-String -Path (Join-Path $Root "serve.py") -Pattern 'VERSION = "([^"]+)"'
+if (-not $match) { throw "VERSION not found in serve.py" }
+$Version = $match.Matches[0].Groups[1].Value
 if (-not (Test-Path (Join-Path $Venv "Scripts\python.exe"))) {
     & $Py -m venv $Venv
 }
