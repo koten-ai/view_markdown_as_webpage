@@ -1,0 +1,7 @@
+{
+  "id": "proofread",
+  "label": "Proofread",
+  "description": "Fix grammar and typos. Do not rewrite the voice.",
+  "system": "You read and edit markdown notes. Return markdown only. Do not wrap the whole answer in a single fence.",
+  "user": "Proofread this markdown. Fix grammar, spelling, and broken markup. Keep the author's voice, links, and structure. Return the full document as markdown only.\n\n---\n\n{{note}}"
+}

@@ -38,8 +38,26 @@
         <p><span class="swatch ext"></span> External — new tab</p>
         <p class="hint">Click a picture, video, or PDF to enlarge. Hover a link for a preview.</p>
         <p class="hint keys">/ filter · [ ] notes · W wide</p>
-        <p class="app-version" id="app-version" hidden></p>
+        <div class="rail-foot">
+          <button type="button" class="rail-gear" id="settings-open" aria-label="Settings" title="Settings">
+            <!-- Lucide "settings" cog — outline, readable at toolbar size -->
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+          <p class="app-version" id="app-version" hidden></p>
+        </div>
       </section>
+      <div
+        class="rail-resize"
+        id="rail-resize"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize notes list"
+        title="Drag to resize the notes list"
+        tabindex="0"
+      ></div>
     </aside>
     <div class="workspace">
       <header class="top">
@@ -47,6 +65,12 @@
           <span></span><span></span><span></span>
         </button>
         <p class="crumb" id="crumb"></p>
+        <button type="button" class="ai-toggle" id="ai-toggle" aria-pressed="false" aria-label="AI off" title="AI is off — click to turn on">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
+          </svg>
+          <span>AI</span>
+        </button>
         <a class="folders-link" href="/" title="Choose another folder">Folders</a>
         <button type="button" class="zen-toggle" id="zen-toggle" aria-pressed="false" title="Hide notes list — more width">Wide</button>
         <div class="type-ctrl" role="group" aria-label="Text size">
@@ -55,6 +79,28 @@
         </div>
       </header>
       <main class="main">
+        <aside id="memory" class="memory" hidden>
+          <div class="memory-cards" id="memory-cards" hidden></div>
+          <div class="memory-keys" id="memory-keys"></div>
+          <div class="memory-related" id="memory-related"></div>
+          <div class="memory-actions" id="memory-actions" hidden></div>
+          <div class="memory-ask-bar">
+            <button type="button" class="chat-copy" id="memory-chat-copy" hidden aria-label="Copy chat" title="Copy chat">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect width="8" height="4" x="8" y="2" rx="1" ry="1"></rect>
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+              </svg>
+            </button>
+            <button type="button" class="memory-ask-toggle" id="memory-ask-toggle" hidden aria-expanded="false">Ask…</button>
+          </div>
+          <div class="memory-ask" id="memory-ask" hidden>
+            <div class="chat-log" id="memory-chat-log"></div>
+            <div class="chat-compose">
+              <textarea id="memory-ask-input" rows="2" placeholder="Ask about this note"></textarea>
+              <button type="button" class="memory-ask-go" id="memory-ask-go">Ask</button>
+            </div>
+          </div>
+        </aside>
         <article id="doc" class="markdown" data-type="1">Loading…</article>
       </main>
     </div>
@@ -62,11 +108,167 @@
   </div>
   <button type="button" class="to-top" id="to-top" hidden>Top</button>
   <div id="peek" class="peek" hidden role="tooltip"></div>
+  <div id="sel-menu" class="sel-menu" hidden>
+    <div class="sel-bar">
+      <button type="button" id="sel-copy">Copy</button>
+      <button type="button" id="sel-insight">AI Insights</button>
+    </div>
+    <div class="sel-insight" id="sel-insight-box" hidden>
+      <blockquote class="sel-quote" id="sel-quote"></blockquote>
+      <textarea id="sel-input" rows="2" placeholder="Ask about this passage"></textarea>
+      <div class="sel-actions">
+        <button type="button" class="sel-shortcut" data-insight="explain">Explain more</button>
+        <button type="button" class="sel-shortcut" data-insight="simplify">Simplify</button>
+        <button type="button" class="sel-ask" id="sel-ask">Ask</button>
+      </div>
+      <p class="sel-hint" id="sel-hint" hidden>Turn AI on to ask.</p>
+    </div>
+  </div>
 
   <div id="lightbox" class="lightbox" hidden>
     <button type="button" class="lb-close" id="lb-close" aria-label="Close">Close</button>
     <div class="lb-stage" id="lb-stage"></div>
     <p class="lb-cap" id="lb-cap"></p>
+  </div>
+
+  <div id="settings" class="settings" hidden>
+    <div class="settings-card" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <header class="settings-head">
+        <h2 id="settings-title">Settings</h2>
+        <button type="button" class="settings-close" id="settings-close">Close</button>
+      </header>
+      <div class="settings-tabs" role="tablist">
+        <button type="button" class="settings-tab" role="tab" id="tab-viewer" aria-controls="pane-viewer" aria-selected="true">Viewer</button>
+        <button type="button" class="settings-tab" role="tab" id="tab-ai" aria-controls="pane-ai" aria-selected="false">Models</button>
+        <button type="button" class="settings-tab" role="tab" id="tab-run" aria-controls="pane-run" aria-selected="false">Run</button>
+      </div>
+      <div class="settings-body">
+        <section class="settings-pane" id="pane-viewer" role="tabpanel" aria-labelledby="tab-viewer">
+          <p class="settings-lead">Portable values live in <code>config.json</code>. Recent folders and API keys stay in gitignored <code>config.local.json</code>.</p>
+          <div class="settings-grid">
+            <label>Gutter
+              <input id="cfg-gutter" type="text" spellcheck="false" />
+            </label>
+            <label>Recent folders kept
+              <input id="cfg-recent-max" type="number" min="1" max="24" />
+            </label>
+            <label>Start directory
+              <input id="cfg-start" type="text" spellcheck="false" />
+            </label>
+            <label>Title override
+              <input id="cfg-title" type="text" placeholder="folder name" />
+            </label>
+            <label>Host
+              <input id="cfg-host" type="text" spellcheck="false" />
+            </label>
+            <label>Port
+              <input id="cfg-port" type="number" min="1" max="65535" />
+            </label>
+          </div>
+          <p class="settings-note" id="cfg-restart"></p>
+          <label class="settings-block">Shortcuts (one path per line)
+            <textarea id="cfg-shortcuts" rows="4" spellcheck="false"></textarea>
+          </label>
+          <label class="settings-block">Skip folders
+            <textarea id="cfg-skip" rows="3" spellcheck="false"></textarea>
+          </label>
+          <h3 class="settings-sub">This browser</h3>
+          <div class="settings-row">
+            <button type="button" class="settings-btn" id="cfg-type-down">A−</button>
+            <button type="button" class="settings-btn" id="cfg-type-up">A+</button>
+            <button type="button" class="settings-btn" id="cfg-rail-reset">Reset rail width</button>
+            <label class="settings-check"><input id="cfg-zen" type="checkbox" /> Wide (hide notes)</label>
+          </div>
+          <div class="settings-actions">
+            <span class="settings-status" id="cfg-status"></span>
+            <button type="button" class="settings-btn primary" id="cfg-save">Save viewer</button>
+          </div>
+        </section>
+
+        <section class="settings-pane" id="pane-ai" role="tabpanel" aria-labelledby="tab-ai" hidden>
+          <form id="ai-form" autocomplete="off">
+          <p class="settings-lead">Same idea as Zeus Hub Config: saved providers plus the Hub vendor list (xAI, OpenAI, Anthropic, Gemini, Azure, Bedrock, Groq, Together, Fireworks, Mistral, DeepSeek, Cohere, Perplexity, OpenRouter, Ollama, Custom). Keys never go in <code>config.json</code>. Empty key on save keeps the one already stored.</p>
+          <div class="settings-grid">
+            <label>Default provider
+              <select id="ai-default"></select>
+            </label>
+            <label>Saved provider
+              <select id="ai-pick"></select>
+            </label>
+            <label>Service catalog
+              <span class="settings-split">
+                <select id="ai-catalog"></select>
+                <button type="button" class="settings-btn" id="ai-add">+ Add</button>
+                <button type="button" class="settings-btn danger" id="ai-del">Delete</button>
+              </span>
+            </label>
+          </div>
+          <div class="settings-grid">
+            <label>ID
+              <input id="ai-id" type="text" spellcheck="false" />
+            </label>
+            <label>Label
+              <input id="ai-label" type="text" />
+            </label>
+            <label class="span-2">Base URL (API root, e.g. <code>https://api.x.ai/v1</code>)
+              <input id="ai-base" type="text" spellcheck="false" placeholder="https://api.x.ai/v1" />
+            </label>
+            <label class="span-2">API key (<code>..........</code> = set; leave to keep)
+              <input id="ai-key" type="password" autocomplete="off" />
+            </label>
+            <label class="span-2">Models (one per line, or comma)
+              <textarea id="ai-models" rows="3" spellcheck="false" placeholder="grok-4"></textarea>
+            </label>
+          </div>
+          <p class="settings-note" id="ai-hint"></p>
+          <div class="settings-actions">
+            <span class="settings-status" id="ai-status"></span>
+            <button type="button" class="settings-btn" id="ai-load">Load models</button>
+            <button type="button" class="settings-btn" id="ai-test">Test connection</button>
+            <button type="button" class="settings-btn primary" id="ai-save">Save providers</button>
+          </div>
+          <pre class="settings-result" id="ai-result" hidden></pre>
+          </form>
+        </section>
+
+        <section class="settings-pane" id="pane-run" role="tabpanel" aria-labelledby="tab-run" hidden>
+          <p class="settings-lead">Send the open note through a saved model. Prompt text lives in <code>ai/prompts/*.json</code> (not hardcoded). The server reads the file from disk. Results are not written back unless you save them. Turn <strong>AI</strong> on in the header first.</p>
+          <p class="settings-note">Note: <strong id="run-doc">—</strong></p>
+          <div class="settings-grid">
+            <label>Prompt
+              <select id="run-preset"></select>
+            </label>
+            <label>Provider
+              <select id="run-provider"></select>
+            </label>
+            <label>Model
+              <select id="run-model"></select>
+            </label>
+          </div>
+          <p class="settings-note" id="run-prompt-desc"></p>
+          <label class="settings-block">Extra instruction
+            <textarea id="run-prompt" rows="4" placeholder="Optional. Required when the catalog item says so."></textarea>
+          </label>
+          <div class="settings-actions">
+            <span class="settings-status" id="run-status"></span>
+            <button type="button" class="settings-btn primary" id="run-go">Run</button>
+          </div>
+          <label class="settings-block">Result
+            <textarea id="run-out" rows="12" spellcheck="false"></textarea>
+          </label>
+          <label class="settings-block">Save as (markdown in this folder)
+            <input id="run-save-path" type="text" spellcheck="false" />
+          </label>
+          <div class="settings-row">
+            <label class="settings-check"><input id="run-overwrite" type="checkbox" /> Replace if that file exists</label>
+          </div>
+          <div class="settings-actions">
+            <button type="button" class="settings-btn" id="run-copy">Copy</button>
+            <button type="button" class="settings-btn primary" id="run-save">Save note</button>
+          </div>
+        </section>
+      </div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>

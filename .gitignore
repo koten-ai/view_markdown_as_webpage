@@ -21,6 +21,10 @@ build/
 .env.*
 !.env.example
 config.local.json
+_memory.json
+_memory.json.tmp
+_chats/
+packaging/icons/app.iconset/
 
 # OS / editor
 .DS_Store

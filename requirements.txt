@@ -1,0 +1,2 @@
+# Keyword extraction (serve.py). Reader HTML/JS still has no build step.
+yake==0.7.3

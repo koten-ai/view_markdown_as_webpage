@@ -109,10 +109,12 @@
     }
   }
 
-  function renderDirs(dirs) {
+  function renderListing(dirs, files) {
     dirsEl.innerHTML = "";
-    dirEmpty.hidden = dirs.length > 0;
-    dirs.forEach(function (d) {
+    const folderRows = dirs || [];
+    const fileRows = files || [];
+    dirEmpty.hidden = folderRows.length > 0 || fileRows.length > 0;
+    folderRows.forEach(function (d) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "dir-row";
@@ -127,6 +129,21 @@
       });
       dirsEl.appendChild(btn);
     });
+    fileRows.forEach(function (f) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "dir-row is-file";
+      const name = document.createElement("strong");
+      name.textContent = f.name;
+      const meta = document.createElement("span");
+      meta.textContent = "md";
+      btn.appendChild(name);
+      btn.appendChild(meta);
+      btn.addEventListener("click", function () {
+        openFolder(currentPath, f.name);
+      });
+      dirsEl.appendChild(btn);
+    });
   }
 
   async function browse(path) {
@@ -136,7 +153,7 @@
       currentPath = data.path;
       pathInput.value = data.path;
       renderCrumbs(data.path, data.parent);
-      renderDirs(data.dirs || []);
+      renderListing(data.dirs || [], data.files || []);
       const n = data.md || 0;
       const files = data.files || [];
       mdCount.textContent = n
@@ -150,7 +167,7 @@
     }
   }
 
-  async function openFolder(path) {
+  async function openFolder(path, doc) {
     showErr("");
     viewBtn.disabled = true;
     try {
@@ -159,7 +176,10 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ path: path }),
       });
-      location.href = "/viewer.html";
+      const next = doc
+        ? "/viewer.html?doc=" + encodeURIComponent(doc)
+        : "/viewer.html";
+      location.href = next;
     } catch (err) {
       viewBtn.disabled = false;
       showErr(err.message || String(err));
