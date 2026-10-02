@@ -1,0 +1,7 @@
+{
+  "id": "outline",
+  "label": "Outline",
+  "description": "Heading outline of the note.",
+  "system": "You read and edit markdown notes. Return markdown only. Do not wrap the whole answer in a single fence.",
+  "user": "Produce a heading outline of this markdown note. Return markdown only.\n\n---\n\n{{note}}"
+}

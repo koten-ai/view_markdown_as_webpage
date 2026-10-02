@@ -1,0 +1,146 @@
+[
+  {
+    "id": "xai",
+    "label": "xAI (Grok)",
+    "suggested_id": "grok",
+    "base_url": "https://api.x.ai/v1",
+    "models": ["grok-4", "grok-4-fast-non-reasoning"],
+    "needs_key": true,
+    "hint": "Remote. OpenAI-compatible. Base URL is the API root; /chat/completions is added."
+  },
+  {
+    "id": "openai",
+    "label": "OpenAI",
+    "suggested_id": "openai",
+    "base_url": "https://api.openai.com/v1",
+    "models": ["gpt-4o-mini", "gpt-4o"],
+    "needs_key": true,
+    "hint": "Remote. OpenAI Chat Completions."
+  },
+  {
+    "id": "anthropic",
+    "label": "Anthropic",
+    "suggested_id": "anthropic",
+    "base_url": "https://api.anthropic.com/v1",
+    "models": ["claude-sonnet-4-20250514", "claude-3-5-haiku-latest"],
+    "needs_key": true,
+    "hint": "Native Messages API is not wired. Use an OpenAI-compatible proxy URL if you have one."
+  },
+  {
+    "id": "gemini",
+    "label": "Google Gemini",
+    "suggested_id": "gemini",
+    "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+    "models": ["gemini-2.0-flash", "gemini-1.5-pro"],
+    "needs_key": true,
+    "hint": "Google OpenAI-compatible endpoint."
+  },
+  {
+    "id": "azure_openai",
+    "label": "Azure OpenAI",
+    "suggested_id": "azure_openai",
+    "base_url": "https://YOUR_RESOURCE.openai.azure.com/openai/v1",
+    "models": ["gpt-4o-mini"],
+    "needs_key": true,
+    "hint": "Replace YOUR_RESOURCE. Deployment names go in Models."
+  },
+  {
+    "id": "bedrock",
+    "label": "Amazon Bedrock",
+    "suggested_id": "bedrock",
+    "base_url": "https://bedrock-runtime.us-east-1.amazonaws.com",
+    "models": ["anthropic.claude-3-5-sonnet-20241022-v2:0"],
+    "needs_key": true,
+    "hint": "Not OpenAI /chat/completions. Use a proxy URL, or pick Custom with a Bedrock-compatible gateway."
+  },
+  {
+    "id": "groq",
+    "label": "Groq",
+    "suggested_id": "groq",
+    "base_url": "https://api.groq.com/openai/v1",
+    "models": ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"],
+    "needs_key": true,
+    "hint": "OpenAI-compatible."
+  },
+  {
+    "id": "together",
+    "label": "Together AI",
+    "suggested_id": "together",
+    "base_url": "https://api.together.xyz/v1",
+    "models": ["meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"],
+    "needs_key": true,
+    "hint": "OpenAI-compatible."
+  },
+  {
+    "id": "fireworks",
+    "label": "Fireworks AI",
+    "suggested_id": "fireworks",
+    "base_url": "https://api.fireworks.ai/inference/v1",
+    "models": ["accounts/fireworks/models/llama-v3p1-8b-instruct"],
+    "needs_key": true,
+    "hint": "OpenAI-compatible."
+  },
+  {
+    "id": "mistral",
+    "label": "Mistral AI",
+    "suggested_id": "mistral",
+    "base_url": "https://api.mistral.ai/v1",
+    "models": ["mistral-small-latest", "mistral-large-latest"],
+    "needs_key": true,
+    "hint": "OpenAI-compatible."
+  },
+  {
+    "id": "deepseek",
+    "label": "DeepSeek",
+    "suggested_id": "deepseek",
+    "base_url": "https://api.deepseek.com/v1",
+    "models": ["deepseek-chat", "deepseek-reasoner"],
+    "needs_key": true,
+    "hint": "OpenAI-compatible."
+  },
+  {
+    "id": "cohere",
+    "label": "Cohere",
+    "suggested_id": "cohere",
+    "base_url": "https://api.cohere.com/compatibility/v1",
+    "models": ["command-r-plus", "command-r"],
+    "needs_key": true,
+    "hint": "OpenAI-compatible compatibility endpoint."
+  },
+  {
+    "id": "perplexity",
+    "label": "Perplexity",
+    "suggested_id": "perplexity",
+    "base_url": "https://api.perplexity.ai",
+    "models": ["sonar", "sonar-pro"],
+    "needs_key": true,
+    "hint": "OpenAI-style chat. /models may be limited."
+  },
+  {
+    "id": "openrouter",
+    "label": "OpenRouter",
+    "suggested_id": "openrouter",
+    "base_url": "https://openrouter.ai/api/v1",
+    "models": ["openai/gpt-4o-mini", "anthropic/claude-3.5-sonnet"],
+    "needs_key": true,
+    "hint": "OpenAI-compatible. Model ids are vendor/name."
+  },
+  {
+    "id": "ollama",
+    "label": "Ollama (local)",
+    "suggested_id": "ollama",
+    "base_url": "http://127.0.0.1:11434/v1",
+    "models": ["llama3.2", "llama3.1"],
+    "needs_key": false,
+    "hint": "This computer. Run ollama serve. Pull a chat model (not nomic-embed-text). No API key."
+  },
+  {
+    "id": "custom",
+    "label": "Custom",
+    "suggested_id": "custom",
+    "base_url": "",
+    "models": [],
+    "needs_key": true,
+    "hint": "Any OpenAI-compatible /v1 root (Inception, vLLM, LM Studio, …)."
+  }
+]

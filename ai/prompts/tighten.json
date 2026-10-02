@@ -1,0 +1,7 @@
+{
+  "id": "tighten",
+  "label": "Tighten",
+  "description": "Shorter and clearer. Keep meaning, links, and structure.",
+  "system": "You read and edit markdown notes. Return markdown only. Do not wrap the whole answer in a single fence.",
+  "user": "Edit this markdown for clarity and brevity. Keep meaning, links, and structure. Return the full document as markdown only.\n\n---\n\n{{note}}"
+}

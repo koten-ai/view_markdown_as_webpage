@@ -1,0 +1,7 @@
+{
+  "id": "summarize",
+  "label": "Summarize",
+  "description": "Keep the heading structure. Markdown only.",
+  "system": "You read and edit markdown notes. Return markdown only. Do not wrap the whole answer in a single fence.",
+  "user": "Summarize this markdown note. Keep the heading structure. Return markdown only — no preamble.\n\n---\n\n{{note}}"
+}

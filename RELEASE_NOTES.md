@@ -15,23 +15,67 @@ python3 serve.py --version
 
 ## Unreleased
 
-- Restarting `serve.py` reopens the last folder from `config.local.json`, so a
-  refresh of the reader does not require picking it again.
+---
+
+## 0.2.0 — 2026-10-02
+
+Companion reader, folder memory, and double-click desktop apps. `VERSION` is
+**0.2.0**. Mac `.dmg` and Windows `.exe` ship from GitHub Actions.
+
+### Desktop
+
+- macOS `.dmg` and Windows `.exe` so people can double-click instead of making
+  a Python venv. `packaging/build_macos.sh` / `packaging/build_windows.ps1`
+  freeze `serve.py` with PyInstaller and an Md app icon.
+- Frozen apps store recents in Application Support / `%APPDATA%`, open a
+  browser, and show a small Open / Quit window. If 8765 is busy they try the
+  next port.
+- GitHub Actions: unit tests on every PR (`.github/workflows/ci.yml`); Mac and
+  Windows builds on PRs and `v*` tags (`.github/workflows/desktop.yml`).
+
+### Reader
+
+- Folder picker lists markdown files in the current folder, not only
+  subfolders. The “N md” count is files sitting in that folder. Click a `.md`
+  row to open on that note. Folder names are navy; markdown names are cyan.
+- Tables: headers stay at the top of the table (no longer covering the first
+  body row). Body rows stripe so a wide line is easier to follow. A table that
+  is still wider than the card still scrolls sideways.
+- Restarting `serve.py` reopens the last folder from `config.local.json`.
 - A missing `README.md` (or any `?doc=` that is not in the folder) falls back
   to the first real note instead of looking like the server is down.
-- Notes rail: each folder has a ▾ / ▴ Hide/Show control; **Hide all** /
-  **Show all** sits at the top of the list; folder names are bolder and white.
+- Notes rail: ▾ / ▴ per folder, **Hide all** / **Show all**, bolder white
+  folder names, draggable width, hover previews to the right of the list.
+- Filter notes uses fuzzysort (CDN): fuzzy match, gold-on-navy highlights,
+  non-matches actually leave the list.
+- Splash **This computer** shortcuts include Downloads.
+- Settings gear (Viewer / Models / Run). Models follows Zeus Hub Config plus
+  `ai/providers.json`. Run prompts live in `ai/prompts/*.json`. Keys stay in
+  `config.local.json` and are redacted on GET.
+- Header **AI** toggle left of Folders. Outline = off; filled cyan = on.
+
+### Companion and memory
+
+- Opening a note writes `_memory.json` at the folder root (SHA-256, headings,
+  local links, keyphrases). YAKE ranks multi-word phrases; one-word terms stay
+  out, and counts of 1–2 are dropped. Stopwords live in `ai/stopwords.txt`.
+- Opening a subfolder reuses an ancestor `_memory.json` via `{ "ref": ".." }`
+  instead of a second store.
+- When AI is on: TL;DR / Important idea / Next action. First fill bounces then
+  types in; later opens show the cached pack at once. Action buttons (Outline,
+  Proofread, Summarize, Tighten) are outlined cyan rectangles, not keyword
+  pills. Keyword chips are navy; pressed chips highlight the note in a fixed
+  14-color palette.
+- Ask is a chat thread (user right, model left) with markdown replies, a
+  regenerate control, copy, pencil-edit, and Copy chat. Ask… becomes Close
+  while the thread is open. Threads live in `_chats/<note>.jsonl`. Highlight →
+  Copy / AI Insights. Settings → Run stays the save-to-file path.
+
+### Tests
+
 - `tests/` holds stdlib unit tests for `serve.py` and Playwright tests for the
-  reader.
-- Sidebar hover previews sit to the right of the notes rail so you can move
-  the mouse down the list without the card covering the next note.
-- Splash **This computer** shortcuts include **Downloads** alongside Home,
-  Documents, and Desktop.
-- Filter notes uses [fuzzysort](https://github.com/farzher/fuzzysort) (CDN):
-  fuzzy / multi-word match, with matching letters highlighted in the rail.
-  Non-matching notes are actually removed from the list (`display:none` so a
-  `display:block` rule cannot keep them visible). Highlight is gold on dark
-  navy for contrast.
+  reader (splash listing, table header vs first row, keyword chips, Ask
+  edit/retry, companion wait-then-stream).
 
 ---
 

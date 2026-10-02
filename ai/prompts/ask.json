@@ -1,0 +1,7 @@
+{
+  "id": "ask",
+  "label": "Ask",
+  "description": "Your prompt plus the open note. Prompt required.",
+  "system": "You read and edit markdown notes. Return markdown only. Do not wrap the whole answer in a single fence.",
+  "user": "{{prompt}}\n\n---\n\n{{note}}"
+}

@@ -1,0 +1,8 @@
+{
+  "id": "memory-pack",
+  "label": "Memory pack",
+  "description": "Fill TL;DR, next action, and important idea into folder memory. JSON only.",
+  "hidden": true,
+  "system": "You read markdown notes and return JSON only. No markdown fences. No preamble.",
+  "user": "Read this markdown note. Return a single JSON object, no fences, with this shape:\n{\"tldr\":[\"...\",\"...\",\"...\"],\"next_action\":\"...\",\"important\":\"...\",\"topics\":[\"...\"]}\nRules:\n- tldr: exactly 3 short bullets: the claim, the status, and a hard is-not or limit.\n- next_action: one concrete next step (open a related note, a gap to fill, or a decision).\n- important: one sentence that must not get lost.\n- topics: 3 to 8 short topic tags.\nGround the answer in the note and these counted terms:\n{{keywords}}\n\n---\n\n{{note}}"
+}

@@ -1,18 +1,22 @@
 # Tests
 
-All tests live in this folder. The viewer itself stays stdlib-only; only the
-Playwright suite needs extra packages.
+All tests live in this folder. Keywords use YAKE from the repo-root
+`requirements.txt`. Playwright needs the extra packages below.
 
-## Python (no pip)
+## Python
 
-From the repo root:
+From the repo root (venv with YAKE):
 
 ```bash
-python3 -m unittest discover -s tests
+.venv/bin/python -m unittest discover -s tests
 ```
 
 Covers `VERSION`, note listing, default-doc, path safety, last-folder reopen,
-and the HTTP JSON API (`/api/state`, `/api/notes`).
+the HTTP JSON API (`/api/state`, `/api/notes`), config save, AI helpers
+(key redact / keep, dummy Chat Completions run), the on-disk provider /
+prompt catalogs (`ai/providers.json`, `ai/prompts/*.json`), and folder
+memory (`_memory.json` keyword counts, hash skip, enrich pack), and
+Ask chat (`_chats/<note>.jsonl`, note attached once per hash, retry).
 
 ## Playwright
 
